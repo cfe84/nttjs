@@ -2,9 +2,9 @@
   "name": "nttjs",
   "version": "1.0.0",
   "description": "",
-  "main": "ntt.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "node_modules/mocha/bin/mocha --recursive"
   },
   "repository": {
     "type": "git",
