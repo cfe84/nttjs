@@ -1,5 +1,11 @@
 const should = require("should");
 
+/**
+ *
+ * @param files
+ * @param directories
+ * @returns {{readFile: (function(*)), writeFile: (function(*, *)), listFiles: (function()), listDirectories: (function()), getDirectoryProvider: (function(*)), createDirectory: (function(*))}}
+ */
 const mockFileAdapter  = ({files = {}, directories = {}}) => {
   return {
     readFile: (fileName) => {
