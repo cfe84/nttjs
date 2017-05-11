@@ -1,30 +1,30 @@
 const uuid = require("uuid");
 const ENTITY_FILENAME = "entity.json";
 
-const entity = (fileProvider, serializer) => {
+const entity = (fileAdapter, serializer) => {
   return {
     read: () => {
-      return fileProvider.readFile(ENTITY_FILENAME)
+      return fileAdapter.readFile(ENTITY_FILENAME)
         .then((content) => {
           return serializer.deserialize(content);
         });
     },
     write: (content) => {
       const serializedContent = serializer.serialize(content);
-      return fileProvider.writeFile(ENTITY_FILENAME, serializedContent);
+      return fileAdapter.writeFile(ENTITY_FILENAME, serializedContent);
     },
     listResources: () => {
-      return fileProvider.listDirectories();
+      return fileAdapter.listDirectories();
     },
     listResourceEntities: (resourceName) => {
-      return fileProvider.getDirectoryProvider(resourceName)
+      return fileAdapter.getDirectoryProvider(resourceName)
         .then((subfolderProvider) => subfolderProvider.listDirectories());
     },
     createResourceEntity: (resourceName) => {
       let id;
-      return fileProvider.createDirectory(resourceName)
+      return fileAdapter.createDirectory(resourceName)
         .then(() => {
-          return fileProvider.getDirectoryProvider(resourceName);
+          return fileAdapter.getDirectoryProvider(resourceName);
         })
         .then((subFolderProvider) => {
           id = uuid() + "-" + uuid();

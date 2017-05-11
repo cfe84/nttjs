@@ -2,12 +2,12 @@ const should = require("should");
 const entity = require("./entity");
 const JSONSerializer = require("../middleware/JSONSerializer");
 
-const { mockFileProvider, exampleFileStructure } = require("../../test/mockFileProvider");
+const { mockFileAdapter, exampleFileStructure } = require("../../test/mockFileAdapter");
 
 describe("Entities", () => {
   const createEntityWithNewMock = () => {
     const fileStructure = exampleFileStructure();
-    const mockProvider = mockFileProvider(fileStructure);
+    const mockProvider = mockFileAdapter(fileStructure);
     const newEntity = entity(mockProvider, JSONSerializer);
     newEntity.fileStructure = fileStructure;
     return newEntity;
@@ -58,7 +58,6 @@ describe("Entities", () => {
     });
   });
   describe("Saving entities", () => {
-
     it("should write content correctly", (done) => {
       const entityProvider = createEntityWithNewMock();
       const value = "rtjkwgelfbmvdlksmfww";

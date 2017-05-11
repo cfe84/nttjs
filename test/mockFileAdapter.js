@@ -1,6 +1,6 @@
 const should = require("should");
 
-const mockFileProvider  = ({files = {}, directories = {}}) => {
+const mockFileAdapter  = ({files = {}, directories = {}}) => {
   return {
     readFile: (fileName) => {
       return new Promise((resolve, reject) => {
@@ -39,7 +39,7 @@ const mockFileProvider  = ({files = {}, directories = {}}) => {
     getDirectoryProvider: (directoryName) => {
       return new Promise((resolve, reject) => {
         if (directoryName in directories) {
-          resolve(mockFileProvider(directories[directoryName]));
+          resolve(mockFileAdapter(directories[directoryName]));
         }
         else {
           reject(Error(`Directory does not exist: ${directoryName}`));
@@ -105,7 +105,7 @@ describe("Mock file provider self diagnostic", () => {
   describe("Files", () => {
     it("should read", (done) => {
       const fileStructure = exampleFileStructure();
-      const provider = mockFileProvider(fileStructure);
+      const provider = mockFileAdapter(fileStructure);
       provider.readFile("entity.json")
         .then((entity) => {
           const parsedEntity = JSON.parse(entity);
@@ -116,7 +116,7 @@ describe("Mock file provider self diagnostic", () => {
     });
     context("Writing", () => {
       const fileStructure = exampleFileStructure();
-      const provider = mockFileProvider(fileStructure);
+      const provider = mockFileAdapter(fileStructure);
       function testWriting(fileName, content) {
         provider.writeFile(fileName, content).should.not.be.rejected();
         should(fileStructure.files[fileName]).be.equal(content);
@@ -131,7 +131,7 @@ describe("Mock file provider self diagnostic", () => {
 
     it("should list files", (done) => {
       const fileStructure = exampleFileStructure();
-      const provider = mockFileProvider(fileStructure);
+      const provider = mockFileAdapter(fileStructure);
       provider.listFiles()
         .then((files) => {
           files.length.should.equal(1);
@@ -146,7 +146,7 @@ describe("Mock file provider self diagnostic", () => {
   describe("Directories", () => {
     it("should list subdirs", (done) => {
       const fileStructure = exampleFileStructure();
-      const provider = mockFileProvider(fileStructure);
+      const provider = mockFileAdapter(fileStructure);
       provider.listDirectories()
         .then((subDirectories) => {
           subDirectories.length.should.equal(2);
@@ -160,7 +160,7 @@ describe("Mock file provider self diagnostic", () => {
     });
     it("should go into subdirs", (done) => {
       const fileStructure = exampleFileStructure();
-      const provider = mockFileProvider(fileStructure);
+      const provider = mockFileAdapter(fileStructure);
       provider.getDirectoryProvider("subresource1")
         .then((directory) => {
           return directory.listDirectories();
@@ -178,7 +178,7 @@ describe("Mock file provider self diagnostic", () => {
     context("creating subdirs", () => {
       it("should create subdirs", () => {
         const fileStructure = exampleFileStructure();
-        const provider = mockFileProvider(fileStructure);
+        const provider = mockFileAdapter(fileStructure);
         const directoryName = "testDir";
         should(provider.createDirectory(directoryName)).not.be.rejected();
         should(fileStructure.directories[directoryName]).not.be.undefined();
@@ -187,7 +187,7 @@ describe("Mock file provider self diagnostic", () => {
       });
       it("should not overwrite subdirs", () => {
         const fileStructure = exampleFileStructure();
-        const provider = mockFileProvider(fileStructure);
+        const provider = mockFileAdapter(fileStructure);
         const directoryName = "subresource1";
         should(provider.createDirectory(directoryName)).not.be.rejected();
         should(fileStructure.directories[directoryName]).not.be.undefined();
@@ -198,6 +198,6 @@ describe("Mock file provider self diagnostic", () => {
 });
 
 module.exports = {
-  mockFileProvider: mockFileProvider,
+  mockFileAdapter: mockFileAdapter,
   exampleFileStructure: exampleFileStructure
 };
