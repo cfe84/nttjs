@@ -28,7 +28,7 @@ const mockFileProvider  = ({files = {}, directories = {}}) => {
       });
     },
     listDirectories: () => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const subDirectories = [];
         for(const subDirectory in directories) {
           subDirectories.push(subDirectory);
@@ -62,10 +62,10 @@ const mockFileProvider  = ({files = {}, directories = {}}) => {
 
 
 const entity = (id, content) => {
-  return {
+  return JSON.stringify({
     id: id,
     content: content
-  };
+  });
 };
 
 const exampleFileStructure = () => {
@@ -103,11 +103,15 @@ const exampleFileStructure = () => {
 
 describe("Mock file provider self diagnostic", () => {
   describe("Files", () => {
-    it("should read", () => {
+    it("should read", (done) => {
       const fileStructure = exampleFileStructure();
       const provider = mockFileProvider(fileStructure);
       provider.readFile("entity.json")
-        .then((entity) => entity.id.should.equal(1))
+        .then((entity) => {
+          const parsedEntity = JSON.parse(entity);
+          parsedEntity.id.should.equal(1);
+          done();
+        })
         .catch((error) => should.fail(error, "no error"));
     });
     context("Writing", () => {
@@ -125,13 +129,14 @@ describe("Mock file provider self diagnostic", () => {
       });
     });
 
-    it("should list files", () => {
+    it("should list files", (done) => {
       const fileStructure = exampleFileStructure();
       const provider = mockFileProvider(fileStructure);
       provider.listFiles()
         .then((files) => {
           files.length.should.equal(1);
           files[0].should.equal("entity.json");
+          done();
         })
         .catch((error) => {
           should.fail(error, "no error");
@@ -139,7 +144,7 @@ describe("Mock file provider self diagnostic", () => {
     });
   });
   describe("Directories", () => {
-    it("should list subdirs", () => {
+    it("should list subdirs", (done) => {
       const fileStructure = exampleFileStructure();
       const provider = mockFileProvider(fileStructure);
       provider.listDirectories()
@@ -147,6 +152,7 @@ describe("Mock file provider self diagnostic", () => {
           subDirectories.length.should.equal(2);
           subDirectories[0].should.equal("subresource1");
           subDirectories[1].should.equal("subresource2");
+          done();
         })
         .catch((error) => {
           should.fail(error, "no error");
@@ -187,7 +193,6 @@ describe("Mock file provider self diagnostic", () => {
         should(fileStructure.directories[directoryName]).not.be.undefined();
         fileStructure.directories[directoryName].directories["1"].should.not.be.undefined();
       });
-
     });
   });
 });

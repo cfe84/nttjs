@@ -1,5 +1,6 @@
 const should = require("should");
 const entity = require("./entity");
+const JSONSerializer = require("../middleware/JSONSerializer");
 
 const { mockFileProvider, exampleFileStructure } = require("../../test/mockFileProvider");
 
@@ -7,25 +8,48 @@ describe("Entities", () => {
   const createEntityWithNewMock = () => {
     const fileStructure = exampleFileStructure();
     const mockProvider = mockFileProvider(fileStructure);
-    const newEntity = entity(mockProvider);
+    const newEntity = entity(mockProvider, JSONSerializer);
     newEntity.fileStructure = fileStructure;
     return newEntity;
   };
 
   describe("Loading entities", () => {
-    it("should load entity's content", () => {
+    it("should load entity's content", (done) => {
       const mock = createEntityWithNewMock();
-      should(mock.entity).not.be.undefined();
-      mock.entity.content.should.equal("main entity");
-      mock.entity.id.should.equal(1);
+      mock.read()
+        .then((entity) => {
+          should(entity).not.be.undefined();
+          entity.content.should.equal("main entity");
+          entity.id.should.equal(1);
+          done();
+        })
+        .catch((exception) => {
+          should.fail(exception, "no error");
+        });
     });
-    it("should return sub-resources", () => {
+    it("should return sub-resources", (done) => {
       const mock = createEntityWithNewMock();
       mock.listResources()
         .then((subResources) => {
             should(subResources).not.be.undefined();
-            should(subResources["subresource1"]).not.be.undefined();
-            should(subResources["subresource2"]).not.be.undefined();
+            subResources.should.containEql("subresource1");
+            subResources.should.containEql("subresource2");
+            done();
+          }
+        )
+        .catch((error) => {
+          should.fail(error, "no error");
+        });
+    });
+    it("should return sub-resource entities", (done) => {
+      const mock = createEntityWithNewMock();
+      const resourceName = "subresource1";
+      mock.listResourceEntities(resourceName)
+        .then((entities) => {
+            should(entities).not.be.undefined();
+            entities.should.containEql("1");
+            entities.should.containEql("2");
+            done();
           }
         )
         .catch((error) => {
@@ -34,43 +58,51 @@ describe("Entities", () => {
     });
   });
   describe("Saving entities", () => {
-    it("should save content correctly", () => {
-      const mock = createEntityWithNewMock();
+
+    it("should write content correctly", (done) => {
+      const entityProvider = createEntityWithNewMock();
       const value = "rtjkwgelfbmvdlksmfww";
-      mock.entity.something = value;
-      mock.save();
-      mock.fileStructure.files["entity.json"].something.should.equal(value);
+      const key = "something";
+      entityProvider.read()
+        .then((entity) => {
+          entity[key] = value;
+          entityProvider.write(entity);
+        })
+        .then(() => {
+          const file = JSON.parse(entityProvider.fileStructure.files["entity.json"]);
+          file[key].should.equal(value);
+          done();
+        })
+        .catch((error) => {
+          should.fail(error, "no error");
+        });
     });
-    function testCreatingSubResource(resourceName) {
-      const mock = createEntityWithNewMock();
-      mock.createSubResourceEntity(resourceName)
-        .then((id) => {
-          it("should create a new id", () => {
+
+    function testCreatingResourceEntity(resourceName) {
+      const entity = createEntityWithNewMock();
+      it("should create correctly", (done) => {
+        entity.createResourceEntity(resourceName)
+          .then((id) => {
             should(id).not.be.undefined();
             id.length.should.be.greaterThan(10);
+            should(entity.fileStructure.directories[resourceName]).not.be.undefined("Resource is undefined");
+            should(entity.fileStructure.directories[resourceName].directories).not.be.undefined("Directories is undefined");
+            should(entity.fileStructure.directories[resourceName].directories[id]).not.be.undefined("Directories[id] is undefined");
+            should(entity.fileStructure.directories[resourceName].directories[id].files["entity.json"]).be.undefined();
+            done();
+          })
+          .catch((exception) => {
+            should.fail(exception, "no error");
           });
-          it("should have created resource if not existing", () => {
-            should(mock.fileStructure[resourceName]).not.be.undefined();
-            should(mock.fileStructure[resourceName].directories).not.be.undefined();
-          });
-          it("should add entity subfolder", () => {
-            should(mock.fileStructure[resourceName].directories[id]).not.be.undefined();
-          });
-          it("should not create entity file yet", () => {
-            should(mock.fileStructure[resourceName].directories[id].files["entity.json"]).be.undefined();
-          });
-        })
-        .catch((exception) => {
-          should.fail(exception, "no error");
-        });
+      });
     }
 
     context("create entities in existing sub resource", () => {
-      testCreatingSubResource("subresource1");
+      testCreatingResourceEntity("subresource1");
     });
 
     context("create entities in new sub resource", () => {
-      testCreatingSubResource("newsubresource");
+      testCreatingResourceEntity("newsubresource");
     });
   });
 });

@@ -31,5 +31,8 @@
   "devDependencies": {
     "mocha": "^3.3.0",
     "should": "^11.2.1"
+  },
+  "dependencies": {
+    "uuid": "^3.0.1"
   }
 }
