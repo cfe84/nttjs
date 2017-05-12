@@ -14,42 +14,39 @@ describe("Entities", () => {
   };
 
   describe("Loading entities", () => {
-    it("should load entity's content", (done) => {
+    it("should load entity's content", () => {
       const mock = createEntityWithNewMock();
-      mock.read()
+      return mock.read()
         .then((entity) => {
           should(entity).not.be.undefined();
           entity.content.should.equal("main entity");
           entity.id.should.equal(1);
-          done();
         })
         .catch((exception) => {
           should.fail(exception, "no error");
         });
     });
-    it("should return sub-resources", (done) => {
+    it("should return sub-resources", () => {
       const mock = createEntityWithNewMock();
-      mock.listResources()
+      return mock.listResources()
         .then((subResources) => {
             should(subResources).not.be.undefined();
             subResources.should.containEql("subresource1");
             subResources.should.containEql("subresource2");
-            done();
           }
         )
         .catch((error) => {
           should.fail(error, "no error");
         });
     });
-    it("should return sub-resource entities", (done) => {
+    it("should return sub-resource entities", () => {
       const mock = createEntityWithNewMock();
       const resourceName = "subresource1";
-      mock.listResourceEntities(resourceName)
+      return mock.listResourceEntities(resourceName)
         .then((entities) => {
             should(entities).not.be.undefined();
             entities.should.containEql("1");
             entities.should.containEql("2");
-            done();
           }
         )
         .catch((error) => {
@@ -58,11 +55,11 @@ describe("Entities", () => {
     });
   });
   describe("Saving entities", () => {
-    it("should write content correctly", (done) => {
+    it("should write content correctly", () => {
       const entityProvider = createEntityWithNewMock();
       const value = "rtjkwgelfbmvdlksmfww";
       const key = "something";
-      entityProvider.read()
+      return entityProvider.read()
         .then((entity) => {
           entity[key] = value;
           entityProvider.write(entity);
@@ -70,7 +67,6 @@ describe("Entities", () => {
         .then(() => {
           const file = JSON.parse(entityProvider.fileStructure.files["entity.json"]);
           file[key].should.equal(value);
-          done();
         })
         .catch((error) => {
           should.fail(error, "no error");
@@ -79,8 +75,8 @@ describe("Entities", () => {
 
     function testCreatingResourceEntity(resourceName) {
       const entity = createEntityWithNewMock();
-      it("should create correctly", (done) => {
-        entity.createResourceEntity(resourceName)
+      it("should create correctly", () => {
+        return entity.createResourceEntity(resourceName)
           .then((id) => {
             should(id).not.be.undefined();
             id.length.should.be.greaterThan(10);
@@ -88,7 +84,6 @@ describe("Entities", () => {
             should(entity.fileStructure.directories[resourceName].directories).not.be.undefined("Directories is undefined");
             should(entity.fileStructure.directories[resourceName].directories[id]).not.be.undefined("Directories[id] is undefined");
             should(entity.fileStructure.directories[resourceName].directories[id].files["entity.json"]).be.undefined();
-            done();
           })
           .catch((exception) => {
             should.fail(exception, "no error");
