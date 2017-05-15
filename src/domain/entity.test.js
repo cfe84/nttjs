@@ -41,9 +41,6 @@ describe("Entities", () => {
           should(entity).not.be.undefined();
           entity.content.should.equal("main entity");
           entity.id.should.equal(1);
-        })
-        .catch((exception) => {
-          should.fail(exception, "no error");
         });
     });
     it("should return sub-resources", () => {
@@ -53,10 +50,7 @@ describe("Entities", () => {
             subResources.should.containEql("subresource1");
             subResources.should.containEql("subresource2");
           }
-        )
-        .catch((error) => {
-          should.fail(error, "no error");
-        });
+        );
     });
 
     validatesResourceName(mock.listResourceEntities);
@@ -69,10 +63,7 @@ describe("Entities", () => {
             entities.should.containEql("1");
             entities.should.containEql("2");
           }
-        )
-        .catch((error) => {
-          should.fail(error, "no error");
-        });
+        );
     });
   });
 
@@ -89,9 +80,6 @@ describe("Entities", () => {
         .then(() => {
           const file = JSON.parse(entityProvider.fileStructure.files["entity.json"]);
           file[key].should.equal(value);
-        })
-        .catch((error) => {
-          should.fail(error, "no error");
         });
     });
   });
@@ -112,9 +100,6 @@ describe("Entities", () => {
             should(entity.fileStructure.directories[resourceName].directories).not.be.undefined("Directories is undefined");
             should(entity.fileStructure.directories[resourceName].directories[id]).not.be.undefined("Directories[id] is undefined");
             should(entity.fileStructure.directories[resourceName].directories[id].files["entity.json"]).be.undefined();
-          })
-          .catch((exception) => {
-            should.fail(exception, "no error");
           });
       });
     }
