@@ -52,8 +52,47 @@ describe("FS Integration test", () => {
     return entity.createResourceEntity(RESOURCE_NAME, RESOURCE_ENTITY.id)
       .then((resource) => resource.save(RESOURCE_ENTITY))
       .then(() => {
-        const entityFilename = path.join(resources.rootDirectory, RESOURCE_NAME, RESOURCE_ENTITY.id, "entity.json");
+        const entityFilename = path.join(resources.rootDirectory, RESOURCE_NAME, `${RESOURCE_ENTITY.id}`, "entity.json");
         fs.existsSync(entityFilename).should.be.true("Entity file was not created");
+        const content = fs.readFileSync(entityFilename);
+        const deserializedEntity = JSON.parse(content);
+        deserializedEntity.id.should.equal(RESOURCE_ENTITY.id);
+        deserializedEntity.name.should.equal(RESOURCE_ENTITY.name);
+      });
+  });
+
+  it("creates complex stuff", () => {
+    const RESOURCE = "hello";
+    const SUBRESOUCE = "hi";
+    const SUBSUBRESOUCE = "YO";
+    const ENTITY = {
+      something: "HEY"
+    };
+
+    const SUBSUBRESOURCEID = 4;
+    let resourceID, subresourceid;
+
+    return entity.createResourceEntity(RESOURCE)
+      .then((subresourceProvider) => {
+        resourceID = subresourceProvider.id;
+        return subresourceProvider.createResourceEntity(SUBRESOUCE);
+      })
+      .then((subresourceProvider) => {
+        subresourceid = subresourceProvider.id;
+        return subresourceProvider.createResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID);
+      })
+      .then((subresourceProvider) => {
+        subresourceProvider.id.should.equal(`${SUBSUBRESOURCEID}`);
+        ENTITY.id = subresourceProvider.id;
+        return subresourceProvider.save(ENTITY);
+      })
+      .then(() => entity.getResourceEntity(RESOURCE, resourceID))
+      .then((subresource) => subresource.getResourceEntity(SUBRESOUCE, subresourceid))
+      .then((subresource) => subresource.getResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID))
+      .then((subresource) => subresource.load())
+      .then((content) => {
+        content.something.should.equal(ENTITY.something);
+        content.id.should.equal(`${SUBSUBRESOURCEID}`);
       });
   });
 
