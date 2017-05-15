@@ -13,7 +13,7 @@ const entity = (fileAdapter, serializer) => {
     }
   };
 
-  return {
+  const entityProvider = {
     load: () => {
       return fileAdapter.readFile(ENTITY_FILENAME)
         .then((content) => {
@@ -45,7 +45,7 @@ const entity = (fileAdapter, serializer) => {
         .then(() => fileAdapter.createDirectory(resourceName))
         .then(() => fileAdapter.getDirectoryProvider(resourceName))
         .then((subFolderProvider) => subFolderProvider.createDirectory(id))
-        .then(() => id);
+        .then(() => entityProvider.getResourceEntity(resourceName, id));
     },
     getResourceEntity: (resourceName, id) => {
       id = toString(id);
@@ -53,9 +53,14 @@ const entity = (fileAdapter, serializer) => {
         .then(() => validateName(id))
         .then(() => fileAdapter.getDirectoryProvider(resourceName))
         .then((resourceFsProvider) => resourceFsProvider.getDirectoryProvider(id))
-        .then((entityFsProvider) => entity(entityFsProvider, serializer));
+        .then((entityFsProvider) => {
+          const provider = entity(entityFsProvider, serializer);
+          provider.id = id;
+          return provider;
+        });
     }
   };
+  return entityProvider;
 };
 
 module.exports = entity;

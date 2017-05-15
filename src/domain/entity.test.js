@@ -96,7 +96,9 @@ it("should not save empty content", () => {
       const entity = createEntityWithNewMock();
       it("should create correctly", () => {
         return entity.createResourceEntity(resourceName, specifiedId)
-          .then((id) => {
+          .then((provider) => {
+            should(provider).not.be.undefined();
+            const id = provider.id;
             should(id).not.be.undefined();
             if (specifiedId) {
               id.should.equal(`${specifiedId}`);
@@ -107,7 +109,9 @@ it("should not save empty content", () => {
             should(entity.fileStructure.directories[resourceName].directories).not.be.undefined("Directories is undefined");
             should(entity.fileStructure.directories[resourceName].directories[id]).not.be.undefined("Directories[id] is undefined");
             should(entity.fileStructure.directories[resourceName].directories[id].files["entity.json"]).be.undefined();
-          });
+            return provider.load();
+          })
+          .should.be.rejectedWith("File does not exist: entity.json");
       });
     }
 
@@ -139,6 +143,7 @@ it("should not save empty content", () => {
       return entity.getResourceEntity("subresource1", 1)
         .then((subEntityProvider) => {
           should(subEntityProvider).not.be.undefined();
+          subEntityProvider.id.should.equal("1");
           return subEntityProvider.load();
         })
         .then((subEntity) => {
