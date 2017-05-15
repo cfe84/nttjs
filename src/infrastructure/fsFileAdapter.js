@@ -47,22 +47,19 @@ const fsFileAdapter = (directoryPath) => {
       });
     },
     getDirectoryProvider: (directoryName) => {
-      return new Promise((resolve, reject) => {
-        resolve(fsFileAdapter(path.join(directoryPath, directoryName)));
-      });
+      return Promise.resolve(fsFileAdapter(path.join(directoryPath, directoryName)));
     },
     createDirectory: (directoryName) => {
-      return new Promise((resolve, reject) => {
-        const newDirectoryPath = path.join(directoryPath, directoryName);
-
-        if (!fs.existsSync(newDirectoryPath)) {
+      const newDirectoryPath = path.join(directoryPath, directoryName);
+      if (!fs.existsSync(newDirectoryPath)) {
+        try {
           fs.mkdirSync(newDirectoryPath);
-          resolve();
         }
-        else {
-          resolve();
+        catch(error) {
+          return Promise.reject(error);
         }
-      });
+      }
+      return Promise.resolve();
     },
     validate: (folderName) => validator.validate(folderName)
   };
