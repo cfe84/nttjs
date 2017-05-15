@@ -20,7 +20,10 @@ const entity = (fileAdapter, serializer) => {
           return serializer.deserialize(content);
         });
     },
-    write: (content) => {
+    save: (content) => {
+      if (content === null || content === undefined || content === "") {
+        return Promise.reject(Error("Cannot save empty content"));
+      }
       const serializedContent = serializer.serialize(content);
       return fileAdapter.writeFile(ENTITY_FILENAME, serializedContent);
     },

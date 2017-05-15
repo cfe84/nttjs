@@ -68,20 +68,27 @@ describe("Entities", () => {
   });
 
   describe("Saving entities", () => {
-    it("should write content correctly", () => {
+    it("should save content correctly", () => {
       const entityProvider = createEntityWithNewMock();
       const value = "rtjkwgelfbmvdlksmfww";
       const key = "something";
       return entityProvider.load()
         .then((entity) => {
           entity[key] = value;
-          entityProvider.write(entity);
+          entityProvider.save(entity);
         })
         .then(() => {
           const file = JSON.parse(entityProvider.fileStructure.files["entity.json"]);
           file[key].should.equal(value);
         });
     });
+it("should not save empty content", () => {
+      const entityProvider = createEntityWithNewMock();
+      return entityProvider.load()
+        .then(() => entityProvider.save())
+        .should.be.rejectedWith("Cannot save empty content");
+    });
+
   });
 
   describe("Saving sub entities", () => {

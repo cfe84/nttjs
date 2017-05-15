@@ -131,7 +131,7 @@ describe("Mock file provider self diagnostic", () => {
         provider.writeFile(fileName, content).should.not.be.rejected();
         should(fileStructure.files[fileName]).be.equal(content);
       }
-      it("should write", () => {
+      it("should save", () => {
         testWriting("entity2.json", "tgjwroitjgeofjv02gwi0v0wmrw");
       });
       it("should be able to overwrite content", () => {
