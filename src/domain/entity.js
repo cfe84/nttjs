@@ -13,7 +13,7 @@ const entity = (fileAdapter, serializer) => {
   };
 
   return {
-    read: () => {
+    load: () => {
       return fileAdapter.readFile(ENTITY_FILENAME)
         .then((content) => {
           return serializer.deserialize(content);
