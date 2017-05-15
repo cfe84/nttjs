@@ -65,11 +65,14 @@ describe("FS Integration test", () => {
     const RESOURCE = "hello";
     const SUBRESOUCE = "hi";
     const SUBSUBRESOUCE = "YO";
-    const ENTITY = {
+    const ENTITY1 = {
       something: "HEY"
     };
-
-    const SUBSUBRESOURCEID = 4;
+    const ENTITY2 = {
+      somethingElse: "HEY"
+    };
+    const SUBSUBRESOURCEID1 = 4;
+    const SUBSUBRESOURCEID2 = "jerwijrw";
     let resourceID, subresourceid;
 
     return entity.createResourceEntity(RESOURCE)
@@ -79,20 +82,26 @@ describe("FS Integration test", () => {
       })
       .then((subresourceProvider) => {
         subresourceid = subresourceProvider.id;
-        return subresourceProvider.createResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID);
-      })
-      .then((subresourceProvider) => {
-        subresourceProvider.id.should.equal(`${SUBSUBRESOURCEID}`);
-        ENTITY.id = subresourceProvider.id;
-        return subresourceProvider.save(ENTITY);
+        subresourceProvider.createResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID1)
+          .then((subresourceProvider) => {
+            subresourceProvider.id.should.equal(`${SUBSUBRESOURCEID1}`);
+            ENTITY1.id = subresourceProvider.id;
+            return subresourceProvider.save(ENTITY1);
+          });
+        subresourceProvider.createResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID2)
+          .then((subresourceProvider) => {
+            subresourceProvider.id.should.equal(`${SUBSUBRESOURCEID2}`);
+            ENTITY2.id = subresourceProvider.id;
+            return subresourceProvider.save(ENTITY2);
+          });
       })
       .then(() => entity.getResourceEntity(RESOURCE, resourceID))
       .then((subresource) => subresource.getResourceEntity(SUBRESOUCE, subresourceid))
-      .then((subresource) => subresource.getResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID))
+      .then((subresource) => subresource.getResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID1))
       .then((subresource) => subresource.load())
       .then((content) => {
-        content.something.should.equal(ENTITY.something);
-        content.id.should.equal(`${SUBSUBRESOURCEID}`);
+        content.something.should.equal(ENTITY1.something);
+        content.id.should.equal(`${SUBSUBRESOURCEID1}`);
       });
   });
 

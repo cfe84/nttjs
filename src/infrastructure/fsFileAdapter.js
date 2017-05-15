@@ -54,8 +54,10 @@ const fsFileAdapter = (directoryPath) => {
     createDirectory: (directoryName) => {
       return new Promise((resolve, reject) => {
         const newDirectoryPath = path.join(directoryPath, directoryName);
+
         if (!fs.existsSync(newDirectoryPath)) {
-          fs.mkdir(path.join(directoryPath, directoryName), returnAsPromise(resolve, reject));
+          fs.mkdirSync(newDirectoryPath);
+          resolve();
         }
         else {
           resolve();

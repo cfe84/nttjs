@@ -154,11 +154,14 @@ describe("File system file adapter", () => {
         });
     });
     it("works on existing directories", () => {
+      const validate = () => {
+        should(fs.existsSync(path.join(filesAndDirectories.rootDirectory, filesAndDirectories.dir1name))).be.true();
+        should(fs.existsSync(path.join(filesAndDirectories.rootDirectory, filesAndDirectories.dir1name, filesAndDirectories.dir1file.name))).be.true();
+      };
       return adapter.createDirectory(filesAndDirectories.dir1name)
-        .then(() => {
-          should(fs.existsSync(path.join(filesAndDirectories.rootDirectory, filesAndDirectories.dir1name))).be.true();
-          should(fs.existsSync(path.join(filesAndDirectories.rootDirectory, filesAndDirectories.dir1name, filesAndDirectories.dir1file.name))).be.true();
-        });
+        .then(validate)
+        .then(() => adapter.createDirectory(filesAndDirectories.dir1name))
+        .then(validate);
     });
   });
   describe("Create subdir adapter", () => {
