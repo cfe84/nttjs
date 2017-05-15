@@ -2,6 +2,7 @@ const uuid = require("uuid");
 const ENTITY_FILENAME = "entity.json";
 
 const entity = (fileAdapter, serializer) => {
+  const toString = (resourceName) => `${resourceName}`;
 
   const validateName = (resourceName) => {
     if(resourceName !== null && resourceName !== undefined && fileAdapter.validate(resourceName)) {
@@ -35,6 +36,7 @@ const entity = (fileAdapter, serializer) => {
       if (!id) {
         id = uuid() + "-" + uuid();
       }
+      id = toString(id);
       return validateName(resourceName)
         .then(() => validateName(id))
         .then(() => fileAdapter.createDirectory(resourceName))
@@ -43,6 +45,7 @@ const entity = (fileAdapter, serializer) => {
         .then(() => id);
     },
     getResourceEntity: (resourceName, id) => {
+      id = toString(id);
       return validateName(resourceName)
         .then(() => validateName(id))
         .then(() => fileAdapter.getDirectoryProvider(resourceName))

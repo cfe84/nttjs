@@ -92,7 +92,7 @@ describe("Entities", () => {
           .then((id) => {
             should(id).not.be.undefined();
             if (specifiedId) {
-              id.should.equal(specifiedId);
+              id.should.equal(`${specifiedId}`);
             } else {
               id.length.should.be.greaterThan(10);
             }
@@ -120,12 +120,16 @@ describe("Entities", () => {
     context("create entities with specifying an id", () => {
       testCreatingResourceEntity("newsubresource", "an-ID");
     });
+
+    context("create entities with a numerical id", () => {
+      testCreatingResourceEntity("newsubresource", 109);
+    });
   });
 
   describe("navigate to sub resources", () => {
     const entity = createEntityWithNewMock();
     it("should load entity correctly", () => {
-      return entity.getResourceEntity("subresource1", "1")
+      return entity.getResourceEntity("subresource1", 1)
         .then((subEntityProvider) => {
           should(subEntityProvider).not.be.undefined();
           return subEntityProvider.load();

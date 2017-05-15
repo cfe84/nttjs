@@ -44,6 +44,17 @@ describe("FS Integration test", () => {
   });
 
   it("creates resources", () => {
+    const RESOURCE_NAME = "myresource";
+    const RESOURCE_ENTITY = {
+      id: 1,
+      name: "YOU"
+    };
+    return entity.createResourceEntity(RESOURCE_NAME, RESOURCE_ENTITY.id)
+      .then((resource) => resource.write(RESOURCE_ENTITY))
+      .then(() => {
+        const entityFilename = path.join(resources.rootDirectory, RESOURCE_NAME, RESOURCE_ENTITY.id, "entity.json");
+        fs.existsSync(entityFilename).should.be.true("Entity file was not created");
+      });
   });
 
 });
