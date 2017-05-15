@@ -1,5 +1,7 @@
 const path = require("path");
 const fs = require("fs");
+const validator = require("../middleware/noSpecialCharsFilenameValidator");
+
 
 const returnAsPromise = (resolve, reject, processResult) => (error, result) => {
   if (error) {
@@ -58,7 +60,8 @@ const fsFileAdapter = (directoryPath) => {
           resolve();
         }
       });
-    }
+    },
+    validate: (folderName) => validator.validate(folderName)
   };
 };
 

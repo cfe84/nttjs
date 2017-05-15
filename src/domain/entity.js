@@ -2,6 +2,16 @@ const uuid = require("uuid");
 const ENTITY_FILENAME = "entity.json";
 
 const entity = (fileAdapter, serializer) => {
+
+  const validateName = (resourceName) => {
+    if(resourceName !== null && resourceName !== undefined && fileAdapter.validate(resourceName)) {
+      return Promise.resolve();
+    }
+    else {
+      return Promise.reject(Error(`Invalid identifier: ${resourceName}`));
+    }
+  };
+
   return {
     read: () => {
       return fileAdapter.readFile(ENTITY_FILENAME)
@@ -17,22 +27,27 @@ const entity = (fileAdapter, serializer) => {
       return fileAdapter.listDirectories();
     },
     listResourceEntities: (resourceName) => {
-      return fileAdapter.getDirectoryProvider(resourceName)
+      return validateName(resourceName)
+        .then(() => fileAdapter.getDirectoryProvider(resourceName))
         .then((subfolderProvider) => subfolderProvider.listDirectories());
     },
-    createResourceEntity: (resourceName) => {
-      let id;
-      return fileAdapter.createDirectory(resourceName)
-        .then(() => {
-          return fileAdapter.getDirectoryProvider(resourceName);
-        })
-        .then((subFolderProvider) => {
-          id = uuid() + "-" + uuid();
-          return subFolderProvider.createDirectory(id);
-        })
-        .then(() => {
-          return id;
-        });
+    createResourceEntity: (resourceName, id) => {
+      if (!id) {
+        id = uuid() + "-" + uuid();
+      }
+      return validateName(resourceName)
+        .then(() => validateName(id))
+        .then(() => fileAdapter.createDirectory(resourceName))
+        .then(() => fileAdapter.getDirectoryProvider(resourceName))
+        .then((subFolderProvider) => subFolderProvider.createDirectory(id))
+        .then(() => id);
+    },
+    getResourceEntity: (resourceName, id) => {
+      return validateName(resourceName)
+        .then(() => validateName(id))
+        .then(() => fileAdapter.getDirectoryProvider(resourceName))
+        .then((resourceFsProvider) => resourceFsProvider.getDirectoryProvider(id))
+        .then((entityFsProvider) => entity(entityFsProvider, serializer));
     }
   };
 };

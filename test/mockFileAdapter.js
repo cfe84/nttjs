@@ -1,4 +1,5 @@
 const should = require("should");
+const filenameValidator = require("../src/middleware/noSpecialCharsFilenameValidator");
 
 /**
  *
@@ -62,6 +63,9 @@ const mockFileAdapter  = ({files = {}, directories = {}}) => {
         }
         resolve();
       });
+    },
+    validate: (folderName) => {
+      return filenameValidator.validate(folderName);
     }
   };
 };
@@ -109,7 +113,7 @@ const exampleFileStructure = () => {
 
 describe("Mock file provider self diagnostic", () => {
   describe("Files", () => {
-    it("should read", (done) => {
+    it("should load", (done) => {
       const fileStructure = exampleFileStructure();
       const provider = mockFileAdapter(fileStructure);
       provider.readFile("entity.json")
@@ -201,6 +205,7 @@ describe("Mock file provider self diagnostic", () => {
       });
     });
   });
+
 });
 
 module.exports = {

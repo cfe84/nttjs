@@ -13,10 +13,30 @@ describe("Entities", () => {
     return newEntity;
   };
 
+
+  function validatesResourceName(promiseGenerator) {
+    it("should reject incorrect resource name", () => {
+      const invalidValue = "something/someone";
+      return promiseGenerator(invalidValue).should.be.rejectedWith(`Invalid identifier: ${invalidValue}`);
+    });
+  }
+
+  function validatesId(promiseGenerator) {
+    it("should reject incorrect entity id", () => {
+      const invalidValue = "something/someone";
+      return promiseGenerator("sdfsdfs", invalidValue).should.be.rejectedWith(`Invalid identifier: ${invalidValue}`);
+    });
+  }
+
+  const validatesResourceNameAndId = (promiseGenerator) => {
+    validatesResourceName(promiseGenerator);
+    validatesId(promiseGenerator);
+  };
+
   describe("Loading entities", () => {
+    const mock = createEntityWithNewMock();
     it("should load entity's content", () => {
-      const mock = createEntityWithNewMock();
-      return mock.read()
+      return mock.load()
         .then((entity) => {
           should(entity).not.be.undefined();
           entity.content.should.equal("main entity");
@@ -27,7 +47,6 @@ describe("Entities", () => {
         });
     });
     it("should return sub-resources", () => {
-      const mock = createEntityWithNewMock();
       return mock.listResources()
         .then((subResources) => {
             should(subResources).not.be.undefined();
@@ -39,8 +58,10 @@ describe("Entities", () => {
           should.fail(error, "no error");
         });
     });
+
+    validatesResourceName(mock.listResourceEntities);
+
     it("should return sub-resource entities", () => {
-      const mock = createEntityWithNewMock();
       const resourceName = "subresource1";
       return mock.listResourceEntities(resourceName)
         .then((entities) => {
@@ -54,12 +75,13 @@ describe("Entities", () => {
         });
     });
   });
+
   describe("Saving entities", () => {
     it("should write content correctly", () => {
       const entityProvider = createEntityWithNewMock();
       const value = "rtjkwgelfbmvdlksmfww";
       const key = "something";
-      return entityProvider.read()
+      return entityProvider.load()
         .then((entity) => {
           entity[key] = value;
           entityProvider.write(entity);
@@ -72,14 +94,20 @@ describe("Entities", () => {
           should.fail(error, "no error");
         });
     });
+  });
 
-    function testCreatingResourceEntity(resourceName) {
+  describe("Saving sub entities", () => {
+    function testCreatingResourceEntity(resourceName, specifiedId) {
       const entity = createEntityWithNewMock();
       it("should create correctly", () => {
-        return entity.createResourceEntity(resourceName)
+        return entity.createResourceEntity(resourceName, specifiedId)
           .then((id) => {
             should(id).not.be.undefined();
-            id.length.should.be.greaterThan(10);
+            if (specifiedId) {
+              id.should.equal(specifiedId);
+            } else {
+              id.length.should.be.greaterThan(10);
+            }
             should(entity.fileStructure.directories[resourceName]).not.be.undefined("Resource is undefined");
             should(entity.fileStructure.directories[resourceName].directories).not.be.undefined("Directories is undefined");
             should(entity.fileStructure.directories[resourceName].directories[id]).not.be.undefined("Directories[id] is undefined");
@@ -91,12 +119,46 @@ describe("Entities", () => {
       });
     }
 
+    describe("validates parameters", () => {
+      const entity = createEntityWithNewMock();
+      validatesResourceNameAndId(entity.createResourceEntity);
+    });
+
     context("create entities in existing sub resource", () => {
       testCreatingResourceEntity("subresource1");
     });
 
     context("create entities in new sub resource", () => {
       testCreatingResourceEntity("newsubresource");
+    });
+
+    context("create entities with specifying an id", () => {
+      testCreatingResourceEntity("newsubresource", "an-ID");
+    });
+  });
+
+  describe("navigate to sub resources", () => {
+    const entity = createEntityWithNewMock();
+    it("should load entity correctly", () => {
+      return entity.getResourceEntity("subresource1", "1")
+        .then((subEntityProvider) => {
+          should(subEntityProvider).not.be.undefined();
+          return subEntityProvider.load();
+        })
+        .then((subEntity) => {
+          should(subEntity).not.be.undefined();
+          subEntity.id.should.equal(11);
+          subEntity.content.should.equal("subresource1/1");
+        });
+    });
+    validatesResourceNameAndId(entity.getResourceEntity);
+    it("should fail on non existing sub resource", () => {
+      return entity.getResourceEntity("subresource2324524", "1342")
+        .should.be.rejectedWith("Directory does not exist: subresource2324524");
+    });
+    it("should fail on non existing sub entity", () => {
+      return entity.getResourceEntity("subresource1", "3434")
+        .should.be.rejectedWith("Directory does not exist: 3434");
     });
   });
 });
