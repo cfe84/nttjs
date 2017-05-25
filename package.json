@@ -33,6 +33,7 @@
     "should": "^11.2.1"
   },
   "dependencies": {
+    "azure-storage": "^2.1.0",
     "uuid": "^3.0.1"
   }
 }

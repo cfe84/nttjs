@@ -3,6 +3,7 @@ const validator = require("./noSpecialCharsFilenameValidator");
 describe("Name validation", () => {
   it("should validate correct names", () => {
     validator.validate("kdsjfskdjfsk").should.be.true("only lower case characters");
+    validator.validate("kdsjfs kdjfsk").should.be.true("spaces are valid");
     validator.validate("sdSf992").should.be.true("mix of lower, upper and numbers");
     validator.validate("subresource1").should.be.true("subresource1");
     validator.validate("00000000000").should.be.true("string with only zeros");
