@@ -1,5 +1,6 @@
 const entity = require("./domain/entity");
 const fsFileAdapter = require("./infrastructure/fsFileAdapter");
+const azureBlobStorageAdapter = require("./infrastructure/azureBlobStorageFileAdapter");
 const JSONSerializer = require("./middleware/JSONSerializer");
 
 /**
@@ -10,7 +11,8 @@ const ntt =  {
     return entity(adapter, serializer);
   },
   adapters: {
-    fs: fsFileAdapter
+    fs: fsFileAdapter,
+    azureBlobStorage: azureBlobStorageAdapter
   }
 };
 
