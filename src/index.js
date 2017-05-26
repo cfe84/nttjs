@@ -12,7 +12,7 @@ const ntt =  {
   },
   adapters: {
     fs: fsFileAdapter,
-    azureBlobStorage: azureBlobStorageAdapter
+    azure: azureBlobStorageAdapter
   }
 };
 

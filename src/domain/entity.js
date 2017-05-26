@@ -1,8 +1,8 @@
 const uuid = require("uuid");
 const ENTITY_FILENAME = "entity.json";
+const resourceProvider = require("./resource");
 
 const entity = (fileAdapter, serializer) => {
-  const toString = (resourceName) => `${resourceName}`;
 
   const validateName = (resourceName) => {
     if(resourceName !== null && resourceName !== undefined && fileAdapter.validate(resourceName)) {
@@ -30,34 +30,19 @@ const entity = (fileAdapter, serializer) => {
     listResources: () => {
       return fileAdapter.listDirectories();
     },
-    listResourceEntities: (resourceName) => {
+    getResource: (resourceName) => {
       return validateName(resourceName)
         .then(() => fileAdapter.getDirectoryProvider(resourceName))
-        .then((subfolderProvider) => subfolderProvider.listDirectories());
-    },
-    createResourceEntity: (resourceName, id) => {
-      if (!id) {
-        id = uuid() + "-" + uuid();
-      }
-      id = toString(id);
-      return validateName(resourceName)
-        .then(() => validateName(id))
-        .then(() => fileAdapter.createDirectory(resourceName))
-        .then(() => fileAdapter.getDirectoryProvider(resourceName))
-        .then((subFolderProvider) => subFolderProvider.createDirectory(id))
-        .then(() => entityProvider.getResourceEntity(resourceName, id));
-    },
-    getResourceEntity: (resourceName, id) => {
-      id = toString(id);
-      return validateName(resourceName)
-        .then(() => validateName(id))
-        .then(() => fileAdapter.getDirectoryProvider(resourceName))
-        .then((resourceFsProvider) => resourceFsProvider.getDirectoryProvider(id))
-        .then((entityFsProvider) => {
-          const provider = entity(entityFsProvider, serializer);
-          provider.id = id;
-          return provider;
+        .then((provider) => {
+          const resource = resourceProvider(provider, serializer);
+          resource.name = resourceName;
+          return resource;
         });
+    },
+    createResource: (resourceName) => {
+      return fileAdapter.validate(resourceName)
+        .then(() => fileAdapter.createDirectory(resourceName))
+        .then(() => entityProvider.getResource(resourceName));
     }
   };
   return entityProvider;
