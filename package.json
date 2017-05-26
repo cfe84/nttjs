@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "node_modules/mocha/bin/mocha --recursive src"
+    "test": "mocha --recursive src"
   },
   "repository": {
     "type": "git",
