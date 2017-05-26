@@ -13,6 +13,9 @@ const clearTestContainer = (config, callback) => {
   const blobService = azure.createBlobService(config.account, config.key);
   const options = {useFlatBlobListing: true};
   blobService.listBlobsSegmented(TEST_CONTAINER, null, options, (error, result) => {
+    if (error) {
+      throw error;
+    }
     let i = result.entries.length;
     if (i === 0) {
       return callback();
