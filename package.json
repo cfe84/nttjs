@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha --recursive src"
+    "test": "mocha --recursive src",
+    "version": "git add -A dist",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
