@@ -46,7 +46,9 @@ const mockFileAdapter  = ({files = {}, directories = {}}) => {
     getDirectoryProvider: (directoryName) => {
       return new Promise((resolve, reject) => {
         if (directoryName in directories) {
-          resolve(mockFileAdapter(directories[directoryName]));
+          const adapter = mockFileAdapter(directories[directoryName]);
+          adapter.directoryName = directoryName;
+          resolve(adapter);
         }
         else {
           reject(Error(`Directory does not exist: ${directoryName}`));

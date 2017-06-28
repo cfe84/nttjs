@@ -1,13 +1,25 @@
 const should = require("should");
-const entity = require("./entity");
+const entityFactoryProvider = require("./entity");
 const JSONSerializer = require("../middleware/JSONSerializer");
 const { mockFileAdapter, exampleFileStructure } = require("../../test/mockFileAdapter");
 
 describe("Entities", () => {
   const createEntityWithNewMock = () => {
+    const resourceFactoryProviderStub = (serializer, entityFactoryProvider) => {
+      return {
+        create: (fsAdapter) => {
+          return {
+            directoryName: fsAdapter.directoryName,
+            serializer: serializer,
+            entityProvider: entityFactoryProvider
+          };
+        }
+      };
+    };
     const fileStructure = exampleFileStructure();
     const mockProvider = mockFileAdapter(fileStructure);
-    const newEntity = entity(mockProvider, JSONSerializer);
+    const entityFactory = entityFactoryProvider(JSONSerializer, resourceFactoryProviderStub);
+    const newEntity = entityFactory.create(mockProvider);
     newEntity.fileStructure = fileStructure;
     return newEntity;
   };
@@ -20,10 +32,10 @@ describe("Entities", () => {
   }
 
   describe("Loading content", () => {
-    const mock = createEntityWithNewMock();
+    const entityProvider = createEntityWithNewMock();
 
     it("should load entity's content", () => {
-      return mock.load()
+      return entityProvider.load()
         .then((entity) => {
           should(entity).not.be.undefined();
           entity.content.should.equal("main entity");
@@ -44,7 +56,8 @@ describe("Entities", () => {
           entityProvider.save(entity);
         })
         .then(() => {
-          const file = JSON.parse(entityProvider.fileStructure.files["entity.json"]);
+          const encodedFile = entityProvider.fileStructure.files["entity.json"];
+          const file = JSON.parse(encodedFile);
           file[key].should.equal(value);
         });
     });
@@ -77,16 +90,10 @@ describe("Entities", () => {
 
     it("should load resource correctly", () => {
       return entity.getResource("subresource1")
-        .then((subResourceProvider) => {
-          should(subResourceProvider).not.be.undefined();
-          subResourceProvider.name.should.equal("subresource1");
-          return subResourceProvider.getEntity(1);
-        })
-        .then((subEntity) => subEntity.load())
-        .then((content) => {
-          should(content).not.be.undefined();
-          content.id.should.equal(11);
-          content.content.should.equal("subresource1/1");
+        .then((resource) => {
+          should(resource).not.be.undefined();
+          should(resource.name).equal("subresource1");
+          resource.serializer.should.equal(JSONSerializer);
         });
     });
 
