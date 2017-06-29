@@ -8,7 +8,7 @@ const JSONSerializer = require("./middleware/JSONSerializer");
  * @type {{ntt: entity, adapters: {fs: fsFileAdapter}}}
  */
 const ntt =  {
-  ntt: (adapter, serializer = JSONSerializer) => {
+  entity: (adapter, serializer = JSONSerializer) => {
     const entityFactory = entityFactoryProvider(serializer, resourceProviderFactory);
     return entityFactory.create(adapter);
   },
