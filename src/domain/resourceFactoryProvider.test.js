@@ -31,7 +31,7 @@ describe("Resource provider", () => {
   function validatesId(promiseGenerator) {
     it("should reject incorrect entity id", () => {
       const invalidValue = "something/someone";
-      return promiseGenerator(invalidValue).should.be.rejectedWith(`Invalid identifier: ${invalidValue}`);
+      return promiseGenerator(invalidValue).should.be.rejectedWith("File or folder name contains invalid characters");
     });
   }
 

@@ -67,14 +67,7 @@ const mockFileAdapter  = ({files = {}, directories = {}}) => {
       });
     },
     validate: (folderName) => {
-      return new Promise((resolve, reject) => {
-        if (filenameValidator.validate(folderName)) {
-          resolve();
-        }
-        else {
-          reject(Error("Invalid identifier: " + folderName));
-        }
-      });
+      return filenameValidator.validate(folderName);
     }
   };
 };

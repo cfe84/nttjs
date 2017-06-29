@@ -27,7 +27,7 @@ describe("Entities", () => {
   function validatesResourceName(promiseGenerator) {
     it("should reject incorrect resource name", () => {
       const invalidValue = "something/someone";
-      return promiseGenerator(invalidValue).should.be.rejectedWith(`Invalid identifier: ${invalidValue}`);
+      return promiseGenerator(invalidValue).should.be.rejectedWith("File or folder name contains invalid characters");
     });
   }
 
