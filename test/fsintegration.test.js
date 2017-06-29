@@ -33,10 +33,11 @@ const clearTestDir = (rootDirectory) => {
 describe("FS Integration test", () => {
   const resources = prepareTestDir("./test");
 
-  const entity = ntt.ntt(ntt.adapters.fs(resources.rootDirectory));
+  const fileAdapter = ntt.adapters.fs(resources.rootDirectory);
+  const rootEntity = ntt.entity(fileAdapter);
 
   it("reads entity correctly", () => {
-    return entity.load()
+    return rootEntity.load()
       .then((ent) => {
         should(ent).not.be.undefined();
         ent.name.should.equal(resources.entity.name);
@@ -49,8 +50,9 @@ describe("FS Integration test", () => {
       id: 1,
       name: "YOU"
     };
-    return entity.createResourceEntity(RESOURCE_NAME, RESOURCE_ENTITY.id)
-      .then((resource) => resource.save(RESOURCE_ENTITY))
+    return rootEntity.createResource(RESOURCE_NAME)
+      .then((resource) => resource.createEntity(RESOURCE_ENTITY.id))
+      .then((entity) => entity.save(RESOURCE_ENTITY))
       .then(() => {
         const entityFilename = path.join(resources.rootDirectory, RESOURCE_NAME, `${RESOURCE_ENTITY.id}`, "entity.json");
         fs.existsSync(entityFilename).should.be.true("Entity file was not created");
@@ -63,46 +65,87 @@ describe("FS Integration test", () => {
 
   it("creates complex stuff", () => {
     const RESOURCE = "hello";
-    const SUBRESOUCE = "hi";
-    const SUBSUBRESOUCE = "YO";
+    const SUBRESOURCE = "hi";
+    const SUBSUBRESOURCE = "YO";
     const ENTITY1 = {
       something: "HEY"
     };
     const ENTITY2 = {
       somethingElse: "HEY"
     };
-    const SUBSUBRESOURCEID1 = 4;
-    const SUBSUBRESOURCEID2 = "jerwijrw";
-    let resourceID, subresourceid;
+    const SUBSUBSUBENTITYID1 = 4;
+    const SUBSUBSUBENTITYID2 = "jerwijrw";
+    let subEntityId, subSubEntityId;
 
-    return entity.createResourceEntity(RESOURCE)
-      .then((subresourceProvider) => {
-        resourceID = subresourceProvider.id;
-        return subresourceProvider.createResourceEntity(SUBRESOUCE);
+    /*
+    Works in two steps.
+    1) Create this tree:
+
+    rootEntity
+    |_> RESOURCE
+        |_> subEntity
+          |_> SUBRESOURCE
+            |_> subSubEntity
+              |_> SUBSUBRESOURCE
+                |_> subSubSubEntity1
+                |_> subSubSubEntity2
+
+     2) Inspect the result of that creation.
+     */
+
+    // 1) Create the tree
+    return rootEntity.createResource(RESOURCE)
+      // Create entity in RESOURCE without specifying an id
+      .then((resource) => resource.createEntity())
+      .then((subEntity) => {
+        subEntityId = subEntity.id;
+        // Create a sub-resource in that sub entity
+        return subEntity.createResource(SUBRESOURCE);
       })
-      .then((subresourceProvider) => {
-        subresourceid = subresourceProvider.id;
-        subresourceProvider.createResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID1)
-          .then((subresourceProvider) => {
-            subresourceProvider.id.should.equal(`${SUBSUBRESOURCEID1}`);
-            ENTITY1.id = subresourceProvider.id;
-            return subresourceProvider.save(ENTITY1);
-          });
-        subresourceProvider.createResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID2)
-          .then((subresourceProvider) => {
-            subresourceProvider.id.should.equal(`${SUBSUBRESOURCEID2}`);
-            ENTITY2.id = subresourceProvider.id;
-            return subresourceProvider.save(ENTITY2);
+      // Then create an entity in RESOURCE/SUBENTITY/SUBRESOURCE
+      .then((subResource) => subResource.createEntity())
+      .then((subSubEntity) => {
+          subSubEntityId = subSubEntity.id;
+          // Then we create a sub-sub-resource in RESOURCE/SUBENTITY/SUBRESOURCE/SUBSUBENTITY/
+          return subSubEntity.createResource(SUBSUBRESOURCE);
+      })
+      .then((subSubResource) => {
+        // Then we branch, and create two entities in that sub-sub-resource
+        subSubResource.createEntity(SUBSUBSUBENTITYID1)
+        .then((subSubSubEntity1) => {
+          subSubSubEntity1.id.should.equal(`${SUBSUBSUBENTITYID1}`);
+          ENTITY1.id = subSubSubEntity1.id;
+          return subSubSubEntity1.save(ENTITY1);
+        });
+        subSubResource.createEntity(SUBSUBSUBENTITYID2)
+          .then((subSubSubEntity2) => {
+            subSubSubEntity2.id.should.equal(`${SUBSUBSUBENTITYID2}`);
+            ENTITY2.id = subSubSubEntity2.id;
+            return subSubSubEntity2.save(ENTITY2);
           });
       })
-      .then(() => entity.getResourceEntity(RESOURCE, resourceID))
-      .then((subresource) => subresource.getResourceEntity(SUBRESOUCE, subresourceid))
-      .then((subresource) => subresource.getResourceEntity(SUBSUBRESOUCE, SUBSUBRESOURCEID1))
-      .then((subresource) => subresource.load())
-      .then((content) => {
-        content.something.should.equal(ENTITY1.something);
-        content.id.should.equal(`${SUBSUBRESOURCEID1}`);
+      // 2) At this point we created a tree. We start inspecting it.
+      .then(() => rootEntity.getResource(RESOURCE))
+      .then((resource) => resource.getEntity(subEntityId))
+      .then((subEntity) => subEntity.getResource(SUBRESOURCE))
+      .then((subResource) => subResource.getEntity(subSubEntityId))
+      .then((subSubEntity) => subSubEntity.getResource(SUBSUBRESOURCE))
+      .then((subSubResource) => {
+        // Then we're back to the branching in the tree so we validate both sides
+        subSubResource.getEntity(SUBSUBSUBENTITYID1)
+          .then((subresource) => subresource.load())
+          .then((content) => {
+            content.something.should.equal(ENTITY1.something);
+            content.id.should.equal(`${SUBSUBSUBENTITYID1}`);
+          });
+        subSubResource.getEntity(SUBSUBSUBENTITYID2)
+          .then((subresource) => subresource.load())
+          .then((content) => {
+            content.somethingElse.should.equal(ENTITY2.somethingElse);
+            content.id.should.equal(`${SUBSUBSUBENTITYID2}`);
+          });
       });
+
   });
 
 });
