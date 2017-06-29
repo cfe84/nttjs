@@ -11,7 +11,7 @@ describe("Entities", () => {
           return {
             directoryName: fsAdapter.directoryName,
             serializer: serializer,
-            entityProvider: entityFactoryProvider
+            entityFactoryProvider: entityFactoryProvider
           };
         }
       };
@@ -32,10 +32,10 @@ describe("Entities", () => {
   }
 
   describe("Loading content", () => {
-    const entityProvider = createEntityWithNewMock();
+    const entity = createEntityWithNewMock();
 
     it("should load entity's content", () => {
-      return entityProvider.load()
+      return entity.load()
         .then((entity) => {
           should(entity).not.be.undefined();
           entity.content.should.equal("main entity");
@@ -94,6 +94,7 @@ describe("Entities", () => {
           should(resource).not.be.undefined();
           should(resource.name).equal("subresource1");
           resource.serializer.should.equal(JSONSerializer);
+          resource.entityFactoryProvider.should.equal(entityFactoryProvider);
         });
     });
 
