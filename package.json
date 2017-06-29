@@ -1,7 +1,7 @@
 {
   "name": "nttjs",
   "version": "1.0.0",
-  "description": "",
+  "description": "Low-tech REST persistence framework based on file systems (disk / cloud storage), because you don't need more to store most things.",
   "main": "src/index.js",
   "scripts": {
     "unittest": "mocha --recursive src",

@@ -1,5 +1,6 @@
-Low-tech resource / entity persistence framework based on file systems
-(disk / cloud storage), because YAGNI.
+Low-tech REST persistence framework based on file systems
+(disk / cloud storage), because you don't need more to store
+most things.
 
 ntt lets you persist a resource tree without all those fancy
 relational technologies, because quite frankly, you don't need
@@ -7,6 +8,10 @@ all that fanciness.
 
 It provides a minimalistic layer other a file-system based store, which,
 in the age and times we live in, are dirt-cheap.
+
+Use ntt if your model is not strongly relational, or relational only
+downwards. You can also couple it with a search engine such as
+Azure Search to ease up finding things together.
 
 ntt currently supports filesystem and Azure Blob Storage, planning
 on adding S3 one day (pull requests welcome).
@@ -128,6 +133,15 @@ To change the default behavior of validation, you can override the
 `validate` method of the file adapter you're using. `validate(string)`
 takes the name or id to validate, and returns a promise, resolved
 if the id or name is valid, and rejected with an error if it's not. 
+
+## Storage model
+
+Entities are sub-folders of resources, named after their id. 
+Resources are sub-folders of entities, named after their resource name.
+Entity body is stored in a `entity.json` file in the entity directory.
+
+Azure file adapter also creates an empty file called `._` in new
+resources to persist the folder.
 
 # Building 
 

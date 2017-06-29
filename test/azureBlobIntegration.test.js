@@ -103,18 +103,18 @@ describe("Azure end to end integration test", () => {
       })
       .then((subSubResource) => {
         // Then we branch, and create two entities in that sub-sub-resource
-        subSubResource.createEntity(SUBSUBSUBENTITYID1)
+        should(() => subSubResource.createEntity(SUBSUBSUBENTITYID1)
           .then((subSubSubEntity1) => {
             subSubSubEntity1.id.should.equal(`${SUBSUBSUBENTITYID1}`);
             ENTITY1.id = subSubSubEntity1.id;
             return subSubSubEntity1.save(ENTITY1);
-          });
-        subSubResource.createEntity(SUBSUBSUBENTITYID2)
+          })).not.be.rejected();
+        should(() => subSubResource.createEntity(SUBSUBSUBENTITYID2)
           .then((subSubSubEntity2) => {
             subSubSubEntity2.id.should.equal(`${SUBSUBSUBENTITYID2}`);
             ENTITY2.id = subSubSubEntity2.id;
             return subSubSubEntity2.save(ENTITY2);
-          });
+          })).not.be.rejected();
       })
       // 2) At this point we created a tree. We start inspecting it.
       .then(() => rootEntity.getResource(RESOURCE))
@@ -124,18 +124,18 @@ describe("Azure end to end integration test", () => {
       .then((subSubEntity) => subSubEntity.getResource(SUBSUBRESOURCE))
       .then((subSubResource) => {
         // Then we're back to the branching in the tree so we validate both sides
-        subSubResource.getEntity(SUBSUBSUBENTITYID1)
+        should(() => subSubResource.getEntity(SUBSUBSUBENTITYID1)
           .then((subresource) => subresource.load())
           .then((content) => {
             content.something.should.equal(ENTITY1.something);
             content.id.should.equal(`${SUBSUBSUBENTITYID1}`);
-          });
-        subSubResource.getEntity(SUBSUBSUBENTITYID2)
+          })).not.be.rejected();
+        should(() => subSubResource.getEntity(SUBSUBSUBENTITYID2)
           .then((subresource) => subresource.load())
           .then((content) => {
             content.somethingElse.should.equal(ENTITY2.somethingElse);
             content.id.should.equal(`${SUBSUBSUBENTITYID2}`);
-          });
+          })).not.be.rejected();
       });
   });
 });
