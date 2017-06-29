@@ -22,7 +22,6 @@ const clearTestContainer = (config, callback) => {
     }
     result.entries.forEach((blob) => {
       blobService.deleteBlobIfExists(TEST_CONTAINER, blob.name, (error, result) => {
-        console.log(`Deleting ${blob.name}`);
         if (--i <= 0) {
           callback();
         }

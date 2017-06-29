@@ -1,5 +1,15 @@
 Low-tech resource / entity persistence framework based on file systems
-(disk / cloud storage).
+(disk / cloud storage), because YAGNI.
+
+ntt lets you persist a resource tree without all those fancy
+relational technologies, because quite frankly, you don't need
+all that fanciness.
+
+It provides a minimalistic layer other a file-system based store, which,
+in the age and times we live in, are dirt-cheap.
+
+ntt currently supports filesystem and Azure Blob Storage, planning
+on adding S3 one day (pull requests welcome).
 
 # Using
 
@@ -13,16 +23,111 @@ Then
 const ntt = require("nttjs");
 
 const adapter = ntt.adapters.fs("./data");
-const root = ntt.ntt(adapter);
+const rootEntity = ntt.entity(adapter);
 
-root.createResourceEntity("examples", "1")
+rootEntity.createResource("examples")
+    .then((resource) => resource.createEntity("1"))
     .then((entity) => entity.save("HURRAY"))
-    .then(() => root.getResourceEntity("examples", "1")
-    .then((entity) => entity.read())
+    .then(() => root.getResource("examples")
+    .then((resource) => resource.getEntity("1")
+    .then((entity) => entity.load())
     .then((content) => console.log(content));
     // HURRAY
 ```
 
+## FS Adapter
+
+fs adapter is instantiated through `ntt.adapters.fs(rootFolder)`. There
+really is nothing much more to it
+
+## Azure blob storage adapter
+
+Adapter needs to be configured. This is done by providing:
+
+- account: the account name (e.g. mystorageaccount)
+- key: one of the storage account keys.
+
+```js
+const containerName = "ntttest";
+const configuration = {
+  account: process.env.AZURE_STORAGE_ACCOUNT,
+  key: process.env.AZURE_STORAGE_KEY
+};
+const fileAdapter = ntt.adapters.azure(config, containerName);
+```
+
+## Entities and resources
+
+ntt works with two intertwined classes: entities and resources. An 
+entity has resources, a resource has entities, and so forth. Entities
+also have a body, which you can load or save.
+
+Model ressembles this:
+```
+rootEntity
+|_> resource-1
+|   |_> entity-1.1
+|   |   |_> resource-1.1.1
+|   |_> entity-1.2
+|       |_> resource-1.2.1
+|       |_> resource-1.2.2
+|_> resource-2
+    |_> entity-2.1
+```
+
+When loading ntt, your first object is the root **entity**, which you get
+by simply passing the file adapter you picked to `ntt.entity`.
+
+Entities are objects offering the following properties:
+
+- `load()` returns a promise, whose callback has one parameter
+  `content` containing the de-serialized content of the entity.
+- `save(entity)` serializes, then saves the entity.
+- `listResources()` lists all sub-resources of the entity. This returns
+  a promise which only parameter is a list of **strings** representing
+  the name of the sub-resources.
+- `getResource(resourceName)` returns a promise, whose only parameter
+  is a resource object to manipulate the resource (see below).
+- `createResource(resourceName)` creates a resource, and returns a
+  resource object to manipulate it, as the only parameter to a promise.
+  This method will _not_ crash if resource already exists, and then 
+  just return the existing resource.
+- `name` is a string, represents the name of the entity.
+  
+Resources are objects offering the following properties:
+
+- `listEntities()` does the same thing as `listResources` but for 
+  entities. Returns a list of string representing the ids of entities
+  in the resource
+- `getEntity(entityId)` returns a promise, whose only parameter
+  is an entity object to manipulate the entity (see above).
+- `createEntity(entityId)` creates an entity with **optional** parameter
+  to define its id. If no `entityId` is supplied, a new guid is 
+  generated. This **will** crash if entity already exists, and will
+  return a promise whose only parameter is an entity object.
+
+## Other considerations
+
+
+**Serialization**
+
+You can specify another serializer than JSON by providing a second 
+attribute to `ntt.entity`. This second attribute should be an object with
+two methods:
+
+- `serialize(content)` serializes an object and returns a string
+- `deserialize(object)` deserializes a string and returns an object.
+
+**Name and id validation**
+
+Ids and names are validated. Validation issues will trigger promise
+rejection. Default validation accepts only `[ a-z0-9_-]+`, ignoring
+case.
+
+To change the default behavior of validation, you can override the
+`validate` method of the file adapter you're using. `validate(string)`
+takes the name or id to validate, and returns a promise, resolved
+if the id or name is valid, and rejected with an error if it's not. 
 
 # Building 
 
