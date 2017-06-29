@@ -101,41 +101,43 @@ describe("Azure end to end integration test", () => {
         // Then we create a sub-sub-resource in RESOURCE/SUBENTITY/SUBRESOURCE/SUBSUBENTITY/
         return subSubEntity.createResource(SUBSUBRESOURCE);
       })
-      .then((subSubResource) => {
+      .then((subSubResource) =>
         // Then we branch, and create two entities in that sub-sub-resource
-        should(() => subSubResource.createEntity(SUBSUBSUBENTITYID1)
+        subSubResource.createEntity(SUBSUBSUBENTITYID1)
           .then((subSubSubEntity1) => {
             subSubSubEntity1.id.should.equal(`${SUBSUBSUBENTITYID1}`);
             ENTITY1.id = subSubSubEntity1.id;
             return subSubSubEntity1.save(ENTITY1);
-          })).not.be.rejected();
-        should(() => subSubResource.createEntity(SUBSUBSUBENTITYID2)
-          .then((subSubSubEntity2) => {
-            subSubSubEntity2.id.should.equal(`${SUBSUBSUBENTITYID2}`);
-            ENTITY2.id = subSubSubEntity2.id;
-            return subSubSubEntity2.save(ENTITY2);
-          })).not.be.rejected();
-      })
+          })
+          .then(() => subSubResource.createEntity(SUBSUBSUBENTITYID2)
+            .then((subSubSubEntity2) => {
+              subSubSubEntity2.id.should.equal(`${SUBSUBSUBENTITYID2}`);
+              ENTITY2.id = subSubSubEntity2.id;
+              return subSubSubEntity2.save(ENTITY2);
+            })
+          )
+      )
       // 2) At this point we created a tree. We start inspecting it.
       .then(() => rootEntity.getResource(RESOURCE))
       .then((resource) => resource.getEntity(subEntityId))
       .then((subEntity) => subEntity.getResource(SUBRESOURCE))
       .then((subResource) => subResource.getEntity(subSubEntityId))
       .then((subSubEntity) => subSubEntity.getResource(SUBSUBRESOURCE))
-      .then((subSubResource) => {
+      .then((subSubResource) =>
         // Then we're back to the branching in the tree so we validate both sides
-        should(() => subSubResource.getEntity(SUBSUBSUBENTITYID1)
+        subSubResource.getEntity(SUBSUBSUBENTITYID1)
           .then((subresource) => subresource.load())
           .then((content) => {
             content.something.should.equal(ENTITY1.something);
             content.id.should.equal(`${SUBSUBSUBENTITYID1}`);
-          })).not.be.rejected();
-        should(() => subSubResource.getEntity(SUBSUBSUBENTITYID2)
-          .then((subresource) => subresource.load())
-          .then((content) => {
-            content.somethingElse.should.equal(ENTITY2.somethingElse);
-            content.id.should.equal(`${SUBSUBSUBENTITYID2}`);
-          })).not.be.rejected();
-      });
+          })
+          .then(() => subSubResource.getEntity(SUBSUBSUBENTITYID2)
+            .then((subresource) => subresource.load())
+            .then((content) => {
+              content.somethingElse.should.equal(ENTITY2.somethingElse);
+              content.id.should.equal(`${SUBSUBSUBENTITYID2}`);
+            })
+        )
+      );
   });
 });
