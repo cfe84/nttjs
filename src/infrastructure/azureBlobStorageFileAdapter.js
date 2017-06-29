@@ -20,7 +20,9 @@ const blobAdapter = (config, containerName) => {
 
   const blobDirectory = (path) => {
 
-    const joinPath = (directoryPath, fileOrDirectoryName) => directoryPath.length ? `${directoryPath}/${fileOrDirectoryName}` : fileOrDirectoryName;
+    const joinPath = (directoryPath, fileOrDirectoryName) => directoryPath.length
+      ? `${directoryPath}/${fileOrDirectoryName}`
+      : fileOrDirectoryName;
     const stripTrailingSlash = (directory) => directory.length > 0 && directory[directory.length - 1] === "/"
       ? directory.substr(0, directory.length - 1)
       : directory;

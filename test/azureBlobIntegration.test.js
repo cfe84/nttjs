@@ -1,50 +1,43 @@
-const ntt = require("../src/index");
-const rmrf = require("rimraf");
-const path = require("path");
-const fs = require("fs");
+const azure = require("azure-storage");
 const should = require("should");
+const ntt = require("../src/index");
 
-const prepareTestDir = (directoryPath) => {
-  const SEP = path.sep;
-  const rootDirectory = `${directoryPath}${SEP}fsIntegrationTest`;
-  const resources = {
-    rootDirectory: rootDirectory,
-    entity: { name: "Tomas" },
-    resourcename: `subresource1`,
-    resourceentityId: "3242omfo235rt2t",
-    resourceentity: { name: "Peter" }
-  };
+const TEST_CONTAINER = "ntttest";
 
-  clearTestDir(rootDirectory);
-  fs.mkdirSync(rootDirectory);
-  fs.writeFileSync(path.join(rootDirectory, "entity.json"), JSON.stringify(resources.entity));
-  fs.mkdirSync(path.join(rootDirectory, resources.resourcename));
-  fs.mkdirSync(path.join(rootDirectory, resources.resourcename, resources.resourceentityId));
-  fs.writeFileSync(path.join(rootDirectory, resources.resourcename, resources.resourceentityId, "entity.json"), JSON.stringify(resources.resourceentity));
-  return resources;
+const config = {
+  account: process.env.AZURE_STORAGE_ACCOUNT,
+  key: process.env.AZURE_STORAGE_KEY
 };
 
-const clearTestDir = (rootDirectory) => {
-  if (fs.existsSync(rootDirectory)){
-    rmrf.sync(rootDirectory);
-  }
+const clearTestContainer = (config, callback) => {
+  const blobService = azure.createBlobService(config.account, config.key);
+  const options = {useFlatBlobListing: true};
+  blobService.listBlobsSegmented(TEST_CONTAINER, null, options, (error, result) => {
+    if (error) {
+      throw error;
+    }
+    let i = result.entries.length;
+    if (i === 0) {
+      return callback();
+    }
+    result.entries.forEach((blob) => {
+      blobService.deleteBlobIfExists(TEST_CONTAINER, blob.name, (error, result) => {
+        if (--i <= 0) {
+          callback();
+        }
+      });
+    });
+  });
 };
 
-describe("FS Integration test", () => {
-  const resources = prepareTestDir("./test");
+// TODO: Factor that with the fsIntegration tests.
+describe("Azure end to end integration test", () => {
+  before((done) => clearTestContainer(config, done));
 
-  const fileAdapter = ntt.adapters.fs(resources.rootDirectory);
+  const fileAdapter = ntt.adapters.azure(config, TEST_CONTAINER);
   const rootEntity = ntt.entity(fileAdapter);
 
-  it("reads entity correctly", () => {
-    return rootEntity.load()
-      .then((ent) => {
-        should(ent).not.be.undefined();
-        ent.name.should.equal(resources.entity.name);
-      });
-  });
-
-  it("creates resources", () => {
+  it("creates resources and reads correctly", () => {
     const RESOURCE_NAME = "myresource";
     const RESOURCE_ENTITY = {
       id: 1,
@@ -53,13 +46,12 @@ describe("FS Integration test", () => {
     return rootEntity.createResource(RESOURCE_NAME)
       .then((resource) => resource.createEntity(RESOURCE_ENTITY.id))
       .then((entity) => entity.save(RESOURCE_ENTITY))
-      .then(() => {
-        const entityFilename = path.join(resources.rootDirectory, RESOURCE_NAME, `${RESOURCE_ENTITY.id}`, "entity.json");
-        fs.existsSync(entityFilename).should.be.true("Entity file was not created");
-        const content = fs.readFileSync(entityFilename);
-        const deserializedEntity = JSON.parse(content);
-        deserializedEntity.id.should.equal(RESOURCE_ENTITY.id);
-        deserializedEntity.name.should.equal(RESOURCE_ENTITY.name);
+      .then(() => rootEntity.getResource(RESOURCE_NAME))
+      .then((resource) => resource.getEntity(RESOURCE_ENTITY.id))
+      .then((entity) => entity.load())
+      .then((ent) => {
+        should(ent).not.be.undefined();
+        ent.name.should.equal(RESOURCE_ENTITY.name);
       });
   });
 
@@ -78,24 +70,24 @@ describe("FS Integration test", () => {
     let subEntityId, subSubEntityId;
 
     /*
-    Works in two steps.
-    1) Create this tree:
+     Works in two steps.
+     1) Create this tree:
 
-    rootEntity
-    |_> RESOURCE
-        |_> subEntity
-          |_> SUBRESOURCE
-            |_> subSubEntity
-              |_> SUBSUBRESOURCE
-                |_> subSubSubEntity1
-                |_> subSubSubEntity2
+     rootEntity
+     |_> RESOURCE
+     |_> subEntity
+     |_> SUBRESOURCE
+     |_> subSubEntity
+     |_> SUBSUBRESOURCE
+     |_> subSubSubEntity1
+     |_> subSubSubEntity2
 
      2) Inspect the result of that creation.
      */
 
     // 1) Create the tree
     return rootEntity.createResource(RESOURCE)
-      // Create entity in RESOURCE without specifying an id
+    // Create entity in RESOURCE without specifying an id
       .then((resource) => resource.createEntity())
       .then((subEntity) => {
         subEntityId = subEntity.id;
@@ -105,18 +97,18 @@ describe("FS Integration test", () => {
       // Then create an entity in RESOURCE/SUBENTITY/SUBRESOURCE
       .then((subResource) => subResource.createEntity())
       .then((subSubEntity) => {
-          subSubEntityId = subSubEntity.id;
-          // Then we create a sub-sub-resource in RESOURCE/SUBENTITY/SUBRESOURCE/SUBSUBENTITY/
-          return subSubEntity.createResource(SUBSUBRESOURCE);
+        subSubEntityId = subSubEntity.id;
+        // Then we create a sub-sub-resource in RESOURCE/SUBENTITY/SUBRESOURCE/SUBSUBENTITY/
+        return subSubEntity.createResource(SUBSUBRESOURCE);
       })
       .then((subSubResource) => {
         // Then we branch, and create two entities in that sub-sub-resource
         subSubResource.createEntity(SUBSUBSUBENTITYID1)
-        .then((subSubSubEntity1) => {
-          subSubSubEntity1.id.should.equal(`${SUBSUBSUBENTITYID1}`);
-          ENTITY1.id = subSubSubEntity1.id;
-          return subSubSubEntity1.save(ENTITY1);
-        });
+          .then((subSubSubEntity1) => {
+            subSubSubEntity1.id.should.equal(`${SUBSUBSUBENTITYID1}`);
+            ENTITY1.id = subSubSubEntity1.id;
+            return subSubSubEntity1.save(ENTITY1);
+          });
         subSubResource.createEntity(SUBSUBSUBENTITYID2)
           .then((subSubSubEntity2) => {
             subSubSubEntity2.id.should.equal(`${SUBSUBSUBENTITYID2}`);
@@ -146,5 +138,4 @@ describe("FS Integration test", () => {
           });
       });
   });
-
 });
