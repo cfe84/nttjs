@@ -1,4 +1,4 @@
-const entityFactoryProvider = require("./domain/entity");
+const entityFactoryProvider = require("./domain/entityFactoryProvider");
 const resourceProviderFactory = require("./domain/resource");
 const fsFileAdapter = require("./infrastructure/fsFileAdapter");
 const azureBlobStorageAdapter = require("./infrastructure/azureBlobStorageFileAdapter");

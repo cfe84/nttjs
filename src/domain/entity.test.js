@@ -1,5 +1,5 @@
 const should = require("should");
-const entityFactoryProvider = require("./entity");
+const entityFactoryProvider = require("./entityFactoryProvider");
 const JSONSerializer = require("../middleware/JSONSerializer");
 const { mockFileAdapter, exampleFileStructure } = require("../../test/mockFileAdapter");
 
