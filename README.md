@@ -1,12 +1,11 @@
-Low-tech REST persistence framework based on file systems
-(disk / cloud storage), because you don't need more to store
-most things.
+Low-tech REST persistence framework providing an abstraction layer
+over file systems (disk / cloud storage).
 
 ntt lets you persist a resource tree without all those fancy
 relational technologies, because quite frankly, you don't need
 all that fanciness.
 
-It provides a minimalistic layer other a file-system based store, which,
+It provides a minimalistic layer over a file-system based store, which,
 in the age and times we live in, are dirt-cheap.
 
 Use ntt if your model is not strongly relational, or relational only
