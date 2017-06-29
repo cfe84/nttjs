@@ -1,4 +1,5 @@
-const entity = require("./domain/entity");
+const entityFactoryProvider = require("./domain/entity");
+const resourceProviderFactory = require("./domain/resource");
 const fsFileAdapter = require("./infrastructure/fsFileAdapter");
 const azureBlobStorageAdapter = require("./infrastructure/azureBlobStorageFileAdapter");
 const JSONSerializer = require("./middleware/JSONSerializer");
@@ -8,7 +9,8 @@ const JSONSerializer = require("./middleware/JSONSerializer");
  */
 const ntt =  {
   ntt: (adapter, serializer = JSONSerializer) => {
-    return entity(adapter, serializer);
+    const entityFactory = entityFactoryProvider(serializer, resourceProviderFactory);
+    return entityFactory.create(adapter);
   },
   adapters: {
     fs: fsFileAdapter,
