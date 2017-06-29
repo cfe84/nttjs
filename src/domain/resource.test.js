@@ -1,5 +1,5 @@
 const should = require("should");
-const resourceProvider = require("./resource");
+const resourceFactoryProvider = require("./resource");
 const JSONSerializer = require("../middleware/JSONSerializer");
 const { mockFileAdapter, exampleFileStructure } = require("../../test/mockFileAdapter");
 
@@ -7,11 +7,23 @@ const { mockFileAdapter, exampleFileStructure } = require("../../test/mockFileAd
 describe("Resource provider", () => {
 
   const createResourceWithNewMock = () => {
+    const entityFactoryProviderStub = (serializer, resourceFactoryProvider) => {
+      return {
+        create: (fsAdapter) => {
+          return {
+            directoryName: fsAdapter.directoryName,
+            serializer: serializer,
+            resourceFactoryProvider: resourceFactoryProvider
+          };
+        }
+      };
+    };
     const fileStructure = exampleFileStructure()
       .directories
       .subresource1;
     const mockProvider = mockFileAdapter(fileStructure);
-    const newResource = resourceProvider(mockProvider, JSONSerializer);
+    const resourceFactory = resourceFactoryProvider(JSONSerializer, entityFactoryProviderStub);
+    const newResource = resourceFactory.create(mockProvider);
     newResource.fileStructure = fileStructure;
     return newResource;
   };
@@ -61,9 +73,9 @@ describe("Resource provider", () => {
       const resource = createResourceWithNewMock();
       it("should create correctly", () => {
         return resource.createEntity(specifiedId)
-          .then((provider) => {
-            should(provider).not.be.undefined();
-            const id = provider.id;
+          .then((entity) => {
+            should(entity).not.be.undefined();
+            const id = entity.id;
             should(id).not.be.undefined();
             if (specifiedId) {
               id.should.equal(`${specifiedId}`);
@@ -72,9 +84,10 @@ describe("Resource provider", () => {
             }
             should(resource.fileStructure.directories[id]).not.be.undefined("Directories[id] is undefined");
             should(resource.fileStructure.directories[id].files["resource.json"]).be.undefined();
-            return provider.load();
-          })
-          .should.be.rejectedWith("File does not exist: entity.json");
+            should(entity.directoryName).equal(specifiedId);
+            should(entity.serializer).equal(JSONSerializer);
+            should(entity.resourceFactoryProvider).equal(resourceFactoryProvider);
+          });
       });
     }
 
