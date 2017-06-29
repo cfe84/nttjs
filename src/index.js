@@ -1,5 +1,5 @@
 const entityFactoryProvider = require("./domain/entityFactoryProvider");
-const resourceProviderFactory = require("./domain/resource");
+const resourceProviderFactory = require("./domain/resourceFactoryProvider");
 const fsFileAdapter = require("./infrastructure/fsFileAdapter");
 const azureBlobStorageAdapter = require("./infrastructure/azureBlobStorageFileAdapter");
 const JSONSerializer = require("./middleware/JSONSerializer");
