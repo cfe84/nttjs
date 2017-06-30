@@ -1,16 +1,13 @@
-Low-tech REST persistence framework providing an abstraction layer
-over file systems (disk / cloud storage).
+ntt is a low-tech REST persistence framework. It lets you persist a 
+resource tree without all those fancy relational technologies, because 
+quite frankly, you don’t need all that. Instead, it provides an 
+abstraction layer over file systems (disk / cloud storage), which, in 
+the day and age we live in, are dirt-cheap.
 
-ntt lets you persist a resource tree without all those fancy
-relational technologies, because quite frankly, you don't need
-all that fanciness.
-
-It provides a minimalistic layer over a file-system based store, which,
-in the age and times we live in, are dirt-cheap.
-
-Use ntt if your model is not strongly relational, or relational only
-downwards. You can also couple it with a search engine such as
-Azure Search to ease up finding things together.
+You can use ntt if your model is not strongly relational, or relations 
+go only one way. If you need any form of indexation, you can also 
+couple it with a search engine such as Azure Search, which also offer 
+some good poor-man options.
 
 ntt currently supports filesystem and Azure Blob Storage, planning
 on adding S3 one day (pull requests welcome).
@@ -58,6 +55,48 @@ const configuration = {
   key: process.env.AZURE_STORAGE_KEY
 };
 const fileAdapter = ntt.adapters.azure(config, containerName);
+```
+
+## In memory adapter
+
+ntt also provides an "in-memory" storage adapter, mostly for test
+purposes. The storage adapter can be instantiated with an optional
+fake file structure.
+
+```js
+  const fileAdapter = ntt.adapters.inMemory(fakeFileStructure);
+```
+
+The fake file structure is an object, with two properties: `files` and
+`directories`, each of which are objects. Files' property names are the
+fake file's name, and its value is the entity content. The in memory 
+adapter does not use serialization, so what you see is what you get. Put
+in the entities directly, into files called `entity.json`.
+
+Directory's property names are the fake directory's name. Its value is
+an object with two properties: `files` and `directories`.
+
+```js
+{
+    files: {
+      "entity.json": { id: 1, prop: "main entity" }
+    },
+    directories: {
+      "subresource1": {
+        directories: {
+          "1": {
+            files: {
+              "entity.json": { id: 2, stuff: "other entity" }
+            }
+          },
+          "2": {
+            files: {
+              "entity.json": { id: 43, prop: "lolilol" }
+            }
+          }
+        }
+      }
+}
 ```
 
 ## Entities and resources

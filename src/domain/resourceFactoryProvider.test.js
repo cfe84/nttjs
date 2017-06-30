@@ -1,7 +1,7 @@
 const should = require("should");
 const resourceFactoryProvider = require("./resourceFactoryProvider");
 const JSONSerializer = require("../middleware/JSONSerializer");
-const { mockFileAdapter, exampleFileStructure } = require("../../test/mockFileAdapter");
+const { inMemoryFileAdapter, exampleFileStructure } = require("../infrastructure/inMemoryFileAdapter");
 
 
 describe("Resource provider", () => {
@@ -21,7 +21,7 @@ describe("Resource provider", () => {
     const fileStructure = exampleFileStructure()
       .directories
       .subresource1;
-    const mockProvider = mockFileAdapter(fileStructure);
+    const mockProvider = inMemoryFileAdapter(fileStructure);
     const resourceFactory = resourceFactoryProvider(JSONSerializer, entityFactoryProviderStub);
     const newResource = resourceFactory.create(mockProvider);
     newResource.fileStructure = fileStructure;

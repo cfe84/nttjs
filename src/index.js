@@ -3,6 +3,7 @@ const resourceProviderFactory = require("./domain/resourceFactoryProvider");
 const fsFileAdapter = require("./infrastructure/fsFileAdapter");
 const azureBlobStorageAdapter = require("./infrastructure/azureBlobStorageFileAdapter");
 const JSONSerializer = require("./middleware/JSONSerializer");
+const {inMemoryFileAdapter} = require("./infrastructure/inMemoryFileAdapter");
 
 /**
  * @type {{ntt: entity, adapters: {fs: fsFileAdapter}}}
@@ -14,7 +15,8 @@ const ntt =  {
   },
   adapters: {
     fs: fsFileAdapter,
-    azure: azureBlobStorageAdapter
+    azure: azureBlobStorageAdapter,
+    inMemory: inMemoryFileAdapter
   }
 };
 
