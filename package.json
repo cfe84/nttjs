@@ -24,7 +24,8 @@
     "storage",
     "blob",
     "file",
-    "system"
+    "system",
+    "azure"
   ],
   "author": "Charles Feval",
   "license": "ISC",
