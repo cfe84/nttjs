@@ -6,7 +6,7 @@ const filenameValidator = require("../middleware/noSpecialCharsFilenameValidator
  * @param directories
  * @returns {{readFile: (function(*)), writeFile: (function(*, *)), listFiles: (function()), listDirectories: (function()), getDirectoryProvider: (function(*)), createDirectory: (function(*))}}
  */
-const inMemoryFileAdapter  = ({files = {}, directories = {}}) => {
+const inMemoryFileAdapter  = ({files = {}, directories = {}} = {}) => {
   return {
     readFile: (fileName) => {
       return new Promise((resolve, reject) => {
