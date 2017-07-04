@@ -41,8 +41,7 @@ describe("Azure blob storage adapter", () => {
 
   before(function (done) {
     this.timeout(60000);
-    done();
-    //clearTestContainer(config, done);
+    clearTestContainer(config, done);
   });
 
   it("writes and reads files correctly", () => {
