@@ -55,31 +55,63 @@ const blobAdapter = (config, containerName) => {
       },
 
       listFiles: () => {
-        const options = {useFlatBlobListing: false}; // We use non flat because we don't want to go in folders
+        const options = { useFlatBlobListing: false }; // We use non flat because we don't want to go in folders
         return new Promise((resolve, reject) => {
-          // TODO: Manage continuation tokens
-            const processResult = (result) =>
-              result.entries.map((blob) => {
-                  let name = blob.name;
-                  name = stripPath(name);
-                  return name;
-              });
-            blobService.listBlobsSegmentedWithPrefix(containerName, path, null, options, returnAsPromise(resolve, reject, processResult));
+          let files = [];
+
+          const processResult = (error, result) => {
+            if (error) {
+              reject(error);
+            }
+            const batch = result.entries.map((blob) => {
+              let name = blob.name;
+              name = stripPath(name);
+              return name;
+            });
+            files = files.concat(batch);
+            if (result.continuationToken) {
+              crawl(result.continuationToken);
+            }
+            else {
+              resolve(files);
+            }
+          };
+
+          const crawl = (continuationToken) =>
+            blobService.listBlobsSegmentedWithPrefix(containerName, path, continuationToken, options, processResult);
+
+          crawl(null);
         });
       },
 
       listDirectories: () => {
         const options = {};
         return new Promise((resolve, reject) => {
-          // Todo: Manage continuation tokens.
-          const processResult = (result) =>
-            result.entries.map((directory) => {
+          let directories = [];
+
+          const processResult = (error, result) => {
+            if (error) {
+              reject(error);
+            }
+            const batch = result.entries.map((directory) => {
               let name = directory.name;
               name = stripTrailingSlash(name);
               name = stripPath(name);
               return name;
             });
-          blobService.listBlobDirectoriesSegmentedWithPrefix(containerName, path, null, options, returnAsPromise(resolve, reject, processResult));
+            directories = directories.concat(batch);
+            if (result.continuationToken) {
+              crawl(result.continuationToken);
+            }
+            else {
+              resolve(directories);
+            }
+          };
+
+          const crawl = (continuationToken) =>
+            blobService.listBlobDirectoriesSegmentedWithPrefix(containerName, path + "/", continuationToken, options, processResult);
+
+          crawl(null);
         });
       },
 
