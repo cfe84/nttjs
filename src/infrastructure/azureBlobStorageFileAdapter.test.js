@@ -44,7 +44,8 @@ describe("Azure blob storage adapter", () => {
     clearTestContainer(config, done);
   });
 
-  it("writes and reads files correctly", () => {
+  it("writes and reads files correctly", function () {
+    this.timeout(4000);
     const CONTENT = "YOLO~!!!" + Math.ceil(Math.random() * 100192931);
     const FILENAME = "hello.txt";
     return adapter.writeFile(FILENAME, CONTENT)
@@ -52,8 +53,9 @@ describe("Azure blob storage adapter", () => {
       .then((content) => content.should.equal(CONTENT));
   });
 
-  it("creates and gets sub directories and list files", () => {
-    const DIRECTORY = "subdirtest";
+  it("creates and gets directories and list files", function () {
+    this.timeout(4000);
+    const DIRECTORY = "dirtest";
     return adapter.createDirectory(DIRECTORY)
       .then(() => adapter.listDirectories())
       .then((directories) => {
@@ -66,6 +68,18 @@ describe("Azure blob storage adapter", () => {
         files.length.should.equal(1);
         files[0].should.equal("._");
       });
+  });
+
+  it("creates and gets sub-directories", async function () {
+    this.timeout(4000);
+    const DIRECTORY = "subdirtest";
+    const SUBDIRECTORY = "subdir1";
+    await adapter.createDirectory(DIRECTORY);
+    const folderProvider = await adapter.getDirectoryProvider(DIRECTORY);
+    await folderProvider.createDirectory(SUBDIRECTORY);
+    const directories  = await folderProvider.listDirectories();
+    should(directories).not.be.undefined();
+    directories.should.containEql(SUBDIRECTORY);
   });
 
   // This is testing the continuation token for files.

@@ -86,6 +86,7 @@ const blobAdapter = (config, containerName) => {
 
       listDirectories: () => {
         const options = {};
+        const dirPath = path.length === 0 ? "" : stripTrailingSlash(path) + "/";
         return new Promise((resolve, reject) => {
           let directories = [];
 
@@ -109,7 +110,7 @@ const blobAdapter = (config, containerName) => {
           };
 
           const crawl = (continuationToken) =>
-            blobService.listBlobDirectoriesSegmentedWithPrefix(containerName, path + "/", continuationToken, options, processResult);
+            blobService.listBlobDirectoriesSegmentedWithPrefix(containerName, dirPath, continuationToken, options, processResult);
 
           crawl(null);
         });
