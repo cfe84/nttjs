@@ -69,6 +69,17 @@ describe("Entities", () => {
         .should.be.rejectedWith("Cannot save empty content");
     });
 
+    xit("should save and load bin content", () => {
+      const entityProvider = createEntityWithNewMock();
+      const value = "rtjkwgelksmfww{{";
+      return entityProvider.saveString(value)
+        .then(() => {
+          const file = entityProvider.fileStructure.files["entity.bin"];
+          file.should.equal(value);
+        })
+        .then(() => entityProvider.loadString())
+        .then((content) => content.should.equal(value));
+    });
   });
 
   describe("Listing resources", () => {
