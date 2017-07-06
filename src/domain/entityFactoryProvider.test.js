@@ -85,6 +85,24 @@ describe("Entities", () => {
     });
   });
 
+  describe("Iterating resources", () => {
+    it("iterates through 2 resources", async () => {
+      const entity = createEntityWithNewMock();
+      const resources = [];
+
+      const iterator = await entity.iterateResources();
+      while(!(element = await iterator.next()).done) {
+        resources.push(element.value);
+      }
+
+      resources.length.should.equal(2);
+      should(resources[0].name).equal("subresource1");
+      resources[0].directoryName.should.equal("subresource1");
+      resources[1].name.should.equal("subresource2");
+      resources[1].directoryName.should.equal("subresource2");
+    });
+  });
+
   describe("Getting resources", () => {
     const entity = createEntityWithNewMock();
 

@@ -103,5 +103,22 @@ describe("Resource provider", () => {
     validatesId(resource.createEntity);
   });
 
+  describe("Iterating entities", () => {
+    it("iterates through 2 entities", async () => {
+      const resource = createResourceWithNewMock();
+      const entities = [];
+
+      const iterator = await resource.iterateEntities();
+      while(!(element = await iterator.next()).done) {
+        entities.push(element.value);
+      }
+
+      entities.length.should.equal(2);
+      should(entities[0].id).equal("1");
+      entities[0].directoryName.should.equal("1");
+      entities[1].id.should.equal("2");
+      entities[1].directoryName.should.equal("2");
+    });
+  });
 });
 

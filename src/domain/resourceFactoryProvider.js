@@ -10,6 +10,30 @@ const resourceFactoryProvider = (serializer, entityFactoryProvider) => {
           return fileAdapter.listDirectories();
         },
 
+        iterateEntities: async () => {
+          const entitiesIdList = await resourceProvider.listEntities();
+          let i = 0;
+          // This is returning something resembling a JS iterator, but asynchronous.
+          // You need to await the "next"
+          const iterator = {
+            next: async () => {
+              const done = i >= entitiesIdList.length;
+              let entity;
+              if (!done) {
+                const entityId = entitiesIdList[i];
+                entity = await resourceProvider.getEntity(entityId);
+              }
+              const element = {
+                value: entity,
+                done: done
+              };
+              i++;
+              return element;
+            }
+          };
+          return iterator;
+        },
+
         createEntity: (id) => {
           if (!id) {
             id = uuid() + "-" + uuid();

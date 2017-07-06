@@ -129,6 +129,14 @@ Entities are objects offering the following properties:
 - `listResources()` lists all sub-resources of the entity. This returns
   a promise which only parameter is a list of **strings** representing
   the name of the sub-resources.
+- `iterateResources()`: _async_, returns an iterator with only one
+  method called `next()` which returns the next element in the list.
+  Although it is resembling the javascript iterator, `next()` is async, 
+  and therefore you need to await it. `next()` is returning an object
+  containing two values:
+  - `done`, a boolean indicating if the iteration is finished
+  - `value`, containing the resource access object, or `undefined` if
+    iterator reached the end.
 - `getResource(resourceName)` returns a promise, whose only parameter
   is a resource object to manipulate the resource (see below).
 - `createResource(resourceName)` creates a resource, and returns a
@@ -142,6 +150,15 @@ Resources are objects offering the following properties:
 - `listEntities()` does the same thing as `listResources` but for 
   entities. Returns a list of string representing the ids of entities
   in the resource
+- `iterateEntities()`: _async_, returns an iterator with only one
+  method called `next()` which returns the next element in the list of
+  entities.
+  Although it is resembling the javascript iterator, `next()` is async, 
+  and therefore you need to await it. `next()` is returning an object
+  containing two values:
+  - `done`, a boolean indicating if the iteration is finished
+  - `value`, containing the entity access object, or `undefined` if
+    iterator reached the end.
 - `getEntity(entityId)` returns a promise, whose only parameter
   is an entity object to manipulate the entity (see above).
 - `createEntity(entityId)` creates an entity with **optional** parameter
@@ -189,3 +206,10 @@ Tests are run through `npm test`. Azure integration tests require to
 create a storage account, a container called `ntttest` inside the 
 container, then setting environment variables `AZURE_STORAGE_ACCOUNT`
 and `AZURE_STORAGE_KEY`.
+
+# Changelog
+
+## 1.3.0
+
+- Added entity iterator and resource iterator to ease the use of
+  lists.
