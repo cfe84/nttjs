@@ -32,6 +32,12 @@ const fsFileAdapter = (directoryPath) => {
         fs.writeFile(fullPath, content, returnAsPromise(resolve, reject));
       });
     },
+    deleteFile: (fileName) => {
+      const fullPath = path.join(directoryPath, fileName);
+      return new Promise((resolve, reject) => {
+        fs.unlink(fullPath, returnAsPromise(resolve, reject));
+      });
+    },
     listFiles: () => {
       return new Promise((resolve, reject) => {
         fs.readdir(directoryPath, returnAsPromise(resolve, reject, (elements) =>
@@ -60,6 +66,12 @@ const fsFileAdapter = (directoryPath) => {
         }
       }
       return Promise.resolve();
+    },
+    deleteDirectory: (directoryName) => {
+      const fullPath = path.join(directoryPath, directoryName);
+      return new Promise((resolve, reject) => {
+        fs.rmdir(fullPath, returnAsPromise(resolve, reject));
+      });
     },
     validate: (folderName) => validator.validate(folderName)
   };

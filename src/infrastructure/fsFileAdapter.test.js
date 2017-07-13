@@ -175,4 +175,42 @@ describe("File system file adapter", () => {
         .then((content) => should(content).be.equal(filesAndDirectories.dir1file.content));
     });
   });
+  describe("Delete files and folders", () => {
+    const { adapter, filesAndDirectories } = getFreshFileStructureAndAdapter();
+    it("deletes files", () => {
+      return adapter.deleteFile(filesAndDirectories.file1.name)
+        .then((err) => {
+          should(err).be.undefined();
+          return adapter.listFiles();
+        })
+        .then((files) => {
+          files.should.not.containEql(filesAndDirectories.file1.name);
+          // didn't delete other files
+          files.should.containEql(filesAndDirectories.file2.name);
+          return adapter.listDirectories();
+        })
+        .then((folders) => {
+          // didn't delete folders
+          folders.should.containEql(filesAndDirectories.dir1name);
+          folders.should.containEql(filesAndDirectories.dir2name);
+        })
+    });
+    it("deletes folders", () => {
+      return adapter.deleteDirectory(filesAndDirectories.dir2name)
+        .then((err) => {
+          should(err).be.undefined();
+          return adapter.listFiles();
+        })
+        .then((files) => {
+          // didn't delete files
+          files.should.containEql(filesAndDirectories.file2.name);
+          return adapter.listDirectories();
+        })
+        .then((folders) => {
+          folders.should.not.containEql(filesAndDirectories.dir2name);
+          // didn't delete other folders
+          folders.should.containEql(filesAndDirectories.dir1name);
+        })
+    });
+  });
 });
