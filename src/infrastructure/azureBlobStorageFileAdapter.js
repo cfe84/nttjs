@@ -54,6 +54,17 @@ const blobAdapter = (config, containerName) => {
         });
       },
 
+      deleteFile: (fileName) => {
+        const fullFileName = joinPath(path, fileName);
+        return new Promise((resolve, reject) => {
+          try {
+            blobService.deleteBlobIfExists(containerName, fullFileName, returnAsPromise(resolve, reject));
+          } catch (error) {
+            reject(error);
+          }
+        });
+      },
+
       listFiles: () => {
         const options = { useFlatBlobListing: false }; // We use non flat because we don't want to go in folders
         return new Promise((resolve, reject) => {
@@ -125,6 +136,19 @@ const blobAdapter = (config, containerName) => {
       createDirectory: (directoryName) => {
         return self.getDirectoryProvider(directoryName)
           .then((provider) => provider.writeFile(DUMMY_FILE_NAME, ""));
+      },
+
+      deleteDirectory: async (directoryName) => {
+        const provider = await self.getDirectoryProvider(directoryName);
+        const subDirectories = await provider.listDirectories();
+        if (subDirectories.length > 0) {
+          throw Error("Directory not empty");
+        }
+        const files = await provider.listFiles();
+        if (files.length > 1 || files[0] !== DUMMY_FILE_NAME) {
+          throw Error("Directory not empty");
+        }
+        return await provider.deleteFile(DUMMY_FILE_NAME);
       },
 
       validate: (folderName) => validator.validate(folderName)

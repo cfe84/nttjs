@@ -44,13 +44,18 @@ describe("Azure blob storage adapter", () => {
     clearTestContainer(config, done);
   });
 
-  it("writes and reads files correctly", function () {
+  it("writes, reads and deletes files correctly", async function () {
     this.timeout(4000);
     const CONTENT = "YOLO~!!!" + Math.ceil(Math.random() * 100192931);
     const FILENAME = "hello.txt";
-    return adapter.writeFile(FILENAME, CONTENT)
-      .then(() => adapter.readFile(FILENAME))
-      .then((content) => content.should.equal(CONTENT));
+    await adapter.writeFile(FILENAME, CONTENT);
+    let files = await adapter.listFiles();
+    files.should.containEql(FILENAME);
+    const content = await adapter.readFile(FILENAME);
+    content.should.equal(CONTENT);
+    await adapter.deleteFile(FILENAME);
+    files = await adapter.listFiles();
+    files.should.not.containEql(FILENAME);
   });
 
   it("creates and gets directories and list files", function () {
@@ -70,16 +75,23 @@ describe("Azure blob storage adapter", () => {
       });
   });
 
-  it("creates and gets sub-directories", async function () {
+  it("creates, gets, and deletes sub-directories", async function () {
     this.timeout(4000);
     const DIRECTORY = "subdirtest";
     const SUBDIRECTORY = "subdir1";
     await adapter.createDirectory(DIRECTORY);
     const folderProvider = await adapter.getDirectoryProvider(DIRECTORY);
     await folderProvider.createDirectory(SUBDIRECTORY);
-    const directories  = await folderProvider.listDirectories();
+    let directories  = await folderProvider.listDirectories();
     should(directories).not.be.undefined();
     directories.should.containEql(SUBDIRECTORY);
+
+    // Not deleting folder if not empty
+    should(adapter.deleteDirectory(DIRECTORY)).be.rejectedWith("Directory not empty");
+
+    await folderProvider.deleteDirectory(SUBDIRECTORY);
+    directories  = await folderProvider.listDirectories();
+    directories.should.not.containEql(SUBDIRECTORY);
   });
 
   // This is testing the continuation token for files.
