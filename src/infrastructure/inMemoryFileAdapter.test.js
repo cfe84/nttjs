@@ -22,11 +22,19 @@ describe("Mock file provider self diagnostic", () => {
         should(fileStructure.files[fileName]).be.equal(content);
       }
       it("should save", () => {
-        testWriting("entity2.json", "tgjwroitjgeofjv02gwi0v0wmrw");
+        return testWriting("entity2.json", "tgjwroitjgeofjv02gwi0v0wmrw");
       });
       it("should be able to overwrite content", () => {
-        testWriting("entity.json", "wr2409mvfm929mf2e9f029m");
+        return testWriting("entity.json", "wr2409mvfm929mf2e9f029m");
       });
+      it("should delete file", () => {
+        const fileName = "entity.json";
+        return provider.listFiles()
+          .then((files) => files.should.containEql(fileName))
+          .then(() => provider.deleteFile(fileName))
+          .then(() => provider.listFiles())
+          .then((files) => files.should.not.containEql(fileName));
+      })
     });
 
     it("should list files", (done) => {
@@ -76,7 +84,7 @@ describe("Mock file provider self diagnostic", () => {
         });
     });
     context("creating subdirs", () => {
-      it("should create subdirs", () => {
+      it("should create and delete subdirs", () => {
         const fileStructure = exampleFileStructure();
         const provider = inMemoryFileAdapter(fileStructure);
         const directoryName = "testDir";
@@ -84,6 +92,8 @@ describe("Mock file provider self diagnostic", () => {
         should(fileStructure.directories[directoryName]).not.be.undefined();
         fileStructure.directories[directoryName].files.should.not.be.undefined();
         fileStructure.directories[directoryName].directories.should.not.be.undefined();
+        should(provider.deleteDirectory(directoryName)).not.be.rejected();
+        should(fileStructure.directories[directoryName]).be.undefined();
       });
       it("should not overwrite subdirs", () => {
         const fileStructure = exampleFileStructure();

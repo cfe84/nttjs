@@ -33,6 +33,17 @@ const inMemoryFileAdapter  = ({files = {}, directories = {}} = {}) => {
         resolve(fileNames);
       });
     },
+    deleteFile: (fileName) => {
+      return new Promise((resolve, reject) => {
+        if (!fileName in files) {
+          reject(Error("File does not exist"));
+        }
+        else {
+          delete files[fileName];
+          resolve();
+        }
+      });
+    },
     listDirectories: () => {
       return new Promise((resolve) => {
         const subDirectories = [];
@@ -63,6 +74,17 @@ const inMemoryFileAdapter  = ({files = {}, directories = {}} = {}) => {
           };
         }
         resolve();
+      });
+    },
+    deleteDirectory: (directoryName) => {
+      return new Promise((resolve, reject) => {
+        if (!directoryName in directories) {
+          reject(Error("Directory does not exist"));
+        }
+        else {
+          delete directories[directoryName];
+          resolve();
+        }
       });
     },
     validate: (folderName) => {
