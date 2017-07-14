@@ -4,11 +4,14 @@ const JSONSerializer = require("../middleware/JSONSerializer");
 const { inMemoryFileAdapter, exampleFileStructure } = require("../infrastructure/inMemoryFileAdapter");
 
 describe("Entities", () => {
-  const createEntityWithNewMock = () => {
+  const createEntityWithNewMock = (entities) => {
     const resourceFactoryProviderStub = (serializer, entityFactoryProvider) => {
       return {
         create: (fsAdapter) => {
           return {
+            listEntities: async () => {
+              return entities
+            },
             directoryName: fsAdapter.directoryName,
             serializer: serializer,
             entityFactoryProvider: entityFactoryProvider
@@ -82,6 +85,42 @@ describe("Entities", () => {
             subResources.should.containEql("subresource2");
           }
         );
+    });
+  });
+
+  describe("Deleting resources", () => {
+    it("should not delete existing sub-resources when not empty", async () => {
+      // Prepare
+      const mock = createEntityWithNewMock(["blerh"]);
+      const RESOURCE_TO_DELETE = "subresource1";
+
+      // Run
+      await mock.deleteResource(RESOURCE_TO_DELETE)
+
+      // Assess
+        .should.be.rejectedWith("Resource not empty");
+      let subResources = await mock.listResources();
+      subResources.should.containEql(RESOURCE_TO_DELETE);
+    });
+
+    it("should delete existing sub-resources when empty", async () => {
+      // Prepare
+      const mock = createEntityWithNewMock([]);
+      const DELETED_RESOURCE_NAME = "subresource2";
+      const NON_DELETED_RESOURCE_NAME = "subresource1";
+      let subResources = await mock.listResources();
+      should(subResources).not.be.undefined();
+      subResources.should.containEql(DELETED_RESOURCE_NAME);
+      subResources.should.containEql(NON_DELETED_RESOURCE_NAME);
+
+      // Run
+      await mock.deleteResource(DELETED_RESOURCE_NAME)
+
+      // Assess
+        .should.not.be.rejected();
+      subResources = await mock.listResources();
+      subResources.should.not.containEql(DELETED_RESOURCE_NAME);
+      subResources.should.containEql(NON_DELETED_RESOURCE_NAME);
     });
   });
 

@@ -66,6 +66,14 @@ const entityFactoryProvider = (serializer, resourceFactoryProvider) => {
           return fileAdapter.validate(resourceName)
             .then(() => fileAdapter.createDirectory(resourceName))
             .then(() => entityProvider.getResource(resourceName));
+        },
+        deleteResource: async (resourceName) => {
+          const subResource = await entityProvider.getResource(resourceName);
+          const entities = await subResource.listEntities();
+          if (entities.length > 0) {
+            throw Error("Resource not empty");
+          }
+          await fileAdapter.deleteDirectory(resourceName);
         }
       };
       return entityProvider;
