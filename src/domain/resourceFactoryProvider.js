@@ -53,6 +53,19 @@ const resourceFactoryProvider = (serializer, entityFactoryProvider) => {
               entity.id = id;
               return entity;
             });
+        },
+
+        deleteEntity: async (id) => {
+          id = toString(id);
+          const entity = await resourceProvider.getEntity(id);
+          const subResources = await entity.listResources();
+          if (subResources.length > 0) {
+            throw Error("Entity not empty");
+          }
+          // Todo: There's a logical inconsistency that the resource should know of
+          // the entity file. Think about how to fix that.
+          await fileAdapter.deleteFile("entity.json");
+          await fileAdapter.deleteDirectory(id);
         }
       };
       return resourceProvider;

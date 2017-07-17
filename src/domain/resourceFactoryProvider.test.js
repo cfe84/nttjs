@@ -6,14 +6,15 @@ const { inMemoryFileAdapter, exampleFileStructure } = require("../infrastructure
 
 describe("Resource provider", () => {
 
-  const createResourceWithNewMock = () => {
+  const createResourceWithNewMock = (subResources) => {
     const entityFactoryProviderStub = (serializer, resourceFactoryProvider) => {
       return {
         create: (fsAdapter) => {
           return {
             directoryName: fsAdapter.directoryName,
             serializer: serializer,
-            resourceFactoryProvider: resourceFactoryProvider
+            resourceFactoryProvider: resourceFactoryProvider,
+            listResources: async () => subResources
           };
         }
       };
@@ -118,6 +119,40 @@ describe("Resource provider", () => {
       entities[0].directoryName.should.equal("1");
       entities[1].id.should.equal("2");
       entities[1].directoryName.should.equal("2");
+    });
+  });
+
+  describe("Delete entities", () => {
+    it("deletes entities when they're empty", async () => {
+      // prepare
+      const DELETED_ENTITY_ID = "1";
+      const NOT_DELETED_ENTITY_ID = "2";
+      const resource = createResourceWithNewMock([]);
+
+      // run
+      await resource.deleteEntity(DELETED_ENTITY_ID)
+
+      // assess
+        .should.not.be.rejected();
+      const list = await resource.listEntities();
+      list.should.containEql(NOT_DELETED_ENTITY_ID);
+      list.should.not.containEql(DELETED_ENTITY_ID);
+    });
+
+    it("doesn't delete on entity not empty", async () => {
+      // prepare
+      const DELETED_ENTITY_ID = "1";
+      const NOT_DELETED_ENTITY_ID = "2";
+      const resource = createResourceWithNewMock(["resource"]);
+
+      // run
+      await resource.deleteEntity(DELETED_ENTITY_ID)
+
+      // assess
+        .should.be.rejectedWith("Entity not empty");
+      const list = await resource.listEntities();
+      list.should.containEql(NOT_DELETED_ENTITY_ID);
+      list.should.containEql(DELETED_ENTITY_ID);
     });
   });
 });
