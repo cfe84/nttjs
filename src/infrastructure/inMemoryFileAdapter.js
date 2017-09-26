@@ -6,8 +6,8 @@ const filenameValidator = require("../middleware/noSpecialCharsFilenameValidator
  * @param directories
  * @returns {{readFile: (function(*)), writeFile: (function(*, *)), listFiles: (function()), listDirectories: (function()), getDirectoryProvider: (function(*)), createDirectory: (function(*))}}
  */
-const inMemoryFileAdapter  = ({files = {}, directories = {}} = {}) => {
-  return {
+const inMemoryFileAdapter  = ({files = {}, directories = {}} = {}, parent = {}) => {
+  const self = {
     readFile: (fileName) => {
       return new Promise((resolve, reject) => {
         if (fileName in files) {
@@ -56,7 +56,7 @@ const inMemoryFileAdapter  = ({files = {}, directories = {}} = {}) => {
     getDirectoryProvider: (directoryName) => {
       return new Promise((resolve, reject) => {
         if (directoryName in directories) {
-          const adapter = inMemoryFileAdapter(directories[directoryName]);
+          const adapter = inMemoryFileAdapter(directories[directoryName], directories);
           adapter.directoryName = directoryName;
           resolve(adapter);
         }
@@ -76,21 +76,44 @@ const inMemoryFileAdapter  = ({files = {}, directories = {}} = {}) => {
         resolve();
       });
     },
-    deleteDirectory: (directoryName) => {
+    deleteDirectory: (dirName) => {
       return new Promise((resolve, reject) => {
-        if (!directoryName in directories) {
-          reject(Error("Directory does not exist"));
+        let directoryCollection = directories;
+        let directoryName = dirName;
+        if (!directoryName) {
+          directoryCollection = parent;
+          directoryName = self.directoryName;
         }
-        else {
-          delete directories[directoryName];
-          resolve();
+        if (!(directoryName in directoryCollection)) {
+          console.error(directoryCollection);
+          return reject(Error(`Directory does not exist: ${directoryName}`));
         }
+        try {
+          const subDirectoryHasFolders = directoryCollection[directoryName].directories &&
+            Object.keys(directoryCollection[directoryName].directories).length > 0;
+          const subDirectoryHasFiles = directoryCollection[directoryName].files &&
+            Object.keys(directoryCollection[directoryName].files).length > 0;
+          if (subDirectoryHasFiles || subDirectoryHasFolders) {
+            console.log(directoryCollection[directoryName]);
+            return reject(Error("Directory not empty"));
+          }
+        }
+        catch(error) {
+          console.error(error);
+          console.error(directoryCollection);
+          console.error(directoryName);
+          console.error(directoryCollection[directoryName]);
+          throw error;
+        }
+        delete directoryCollection[directoryName];
+        resolve();
       });
     },
     validate: (folderName) => {
       return filenameValidator.validate(folderName);
     }
   };
+  return self;
 };
 
 
@@ -119,6 +142,9 @@ const exampleFileStructure = () => {
               "entity.json": entity(12, "subresource1/2")
             }
           }
+        },
+        files: {
+
         }
       },
       "subresource2": {

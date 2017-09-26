@@ -176,8 +176,8 @@ describe("File system file adapter", () => {
     });
   });
   describe("Delete files and folders", () => {
-    const { adapter, filesAndDirectories } = getFreshFileStructureAndAdapter();
     it("deletes files", () => {
+      const { adapter, filesAndDirectories } = getFreshFileStructureAndAdapter();
       return adapter.deleteFile(filesAndDirectories.file1.name)
         .then((err) => {
           should(err).be.undefined();
@@ -196,6 +196,7 @@ describe("File system file adapter", () => {
         })
     });
     it("deletes folders", () => {
+      const { adapter, filesAndDirectories } = getFreshFileStructureAndAdapter();
       return adapter.deleteDirectory(filesAndDirectories.dir2name)
         .then((err) => {
           should(err).be.undefined();
@@ -211,6 +212,19 @@ describe("File system file adapter", () => {
           // didn't delete other folders
           folders.should.containEql(filesAndDirectories.dir1name);
         })
+    });
+
+    it("deletes current folder", async () => {
+      const { adapter, filesAndDirectories } = getFreshFileStructureAndAdapter();
+      const provider = await adapter.getDirectoryProvider(filesAndDirectories.dir2name);
+      await provider.deleteDirectory();
+      const files = await adapter.listFiles();
+      // didn't delete files
+      files.should.containEql(filesAndDirectories.file2.name);
+      const folders = await adapter.listDirectories();
+      folders.should.not.containEql(filesAndDirectories.dir2name);
+      // didn't delete other folders
+      folders.should.containEql(filesAndDirectories.dir1name);
     });
   });
 });

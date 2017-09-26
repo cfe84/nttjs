@@ -4,24 +4,24 @@ const JSONSerializer = require("../middleware/JSONSerializer");
 const { inMemoryFileAdapter, exampleFileStructure } = require("../infrastructure/inMemoryFileAdapter");
 
 describe("Entities", () => {
-  const createEntityWithNewMock = (entities) => {
-    const resourceFactoryProviderStub = (serializer, entityFactoryProvider) => {
-      return {
-        create: (fsAdapter) => {
-          return {
-            listEntities: async () => {
-              return entities
-            },
-            directoryName: fsAdapter.directoryName,
-            serializer: serializer,
-            entityFactoryProvider: entityFactoryProvider
-          };
-        }
-      };
+  const resourceFactoryProviderStub = (entities) => (serializer, entityFactoryProvider) => {
+    return {
+      create: (fsAdapter) => {
+        return {
+          listEntities: async () => {
+            return entities
+          },
+          directoryName: fsAdapter.directoryName,
+          serializer: serializer,
+          entityFactoryProvider: entityFactoryProvider
+        };
+      }
     };
+  };
+  const createEntityWithNewMock = (entities) => {
     const fileStructure = exampleFileStructure();
     const mockProvider = inMemoryFileAdapter(fileStructure);
-    const entityFactory = entityFactoryProvider(JSONSerializer, resourceFactoryProviderStub);
+    const entityFactory = entityFactoryProvider(JSONSerializer, resourceFactoryProviderStub(entities));
     const newEntity = entityFactory.create(mockProvider);
     newEntity.fileStructure = fileStructure;
     return newEntity;
@@ -75,10 +75,10 @@ describe("Entities", () => {
   });
 
   describe("Listing resources", () => {
-    const mock = createEntityWithNewMock();
+    const entity = createEntityWithNewMock();
 
     it("should return sub-resources", () => {
-      return mock.listResources()
+      return entity.listResources()
         .then((subResources) => {
             should(subResources).not.be.undefined();
             subResources.should.containEql("subresource1");
@@ -88,39 +88,38 @@ describe("Entities", () => {
     });
   });
 
-  describe("Deleting resources", () => {
-    it("should not delete existing sub-resources when not empty", async () => {
+  describe("Deleting entities", () => {
+    it("should not delete existing entities when not empty", async () => {
       // Prepare
-      const mock = createEntityWithNewMock(["blerh"]);
-      const RESOURCE_TO_DELETE = "subresource1";
+      const entity = createEntityWithNewMock(["blerh"]);
+      const EXISTING_SUBRESOURCE = "subresource1";
 
       // Run
-      await mock.deleteResource(RESOURCE_TO_DELETE)
+      await entity.delete()
 
       // Assess
-        .should.be.rejectedWith("Resource not empty");
-      let subResources = await mock.listResources();
-      subResources.should.containEql(RESOURCE_TO_DELETE);
+        .should.be.rejectedWith("Entity not empty");
+      let subResources = await entity.listResources();
+      subResources.should.containEql(EXISTING_SUBRESOURCE);
     });
 
-    it("should delete existing sub-resources when empty", async () => {
+    it("should delete entities when empty", async () => {
       // Prepare
-      const mock = createEntityWithNewMock([]);
-      const DELETED_RESOURCE_NAME = "subresource2";
-      const NON_DELETED_RESOURCE_NAME = "subresource1";
-      let subResources = await mock.listResources();
-      should(subResources).not.be.undefined();
-      subResources.should.containEql(DELETED_RESOURCE_NAME);
-      subResources.should.containEql(NON_DELETED_RESOURCE_NAME);
+      const fileStructure = exampleFileStructure();
+      const mockProvider = inMemoryFileAdapter(fileStructure);
+      const subresourceFolder = await mockProvider.getDirectoryProvider("subresource2");
+      const entityFolder = await subresourceFolder.getDirectoryProvider("1");
+      const entityFactory = entityFactoryProvider(JSONSerializer, resourceFactoryProviderStub([]));
+      const entity = entityFactory.create(entityFolder);
+        // empty folder
+      let subResources = await entity.listResources();
+      should(subResources).be.empty();
 
       // Run
-      await mock.deleteResource(DELETED_RESOURCE_NAME)
+      await entity.delete();
 
       // Assess
-        .should.not.be.rejected();
-      subResources = await mock.listResources();
-      subResources.should.not.containEql(DELETED_RESOURCE_NAME);
-      subResources.should.containEql(NON_DELETED_RESOURCE_NAME);
+      (await subresourceFolder.listDirectories()).should.be.empty();
     });
   });
 

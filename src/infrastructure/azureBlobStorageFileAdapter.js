@@ -139,7 +139,7 @@ const blobAdapter = (config, containerName) => {
       },
 
       deleteDirectory: async (directoryName) => {
-        const provider = await self.getDirectoryProvider(directoryName);
+        const provider = directoryName !== undefined ? await self.getDirectoryProvider(directoryName) : self;
         const subDirectories = await provider.listDirectories();
         if (subDirectories.length > 0) {
           throw Error("Directory not empty");

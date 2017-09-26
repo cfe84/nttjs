@@ -95,6 +95,21 @@ describe("Mock file provider self diagnostic", () => {
         should(provider.deleteDirectory(directoryName)).not.be.rejected();
         should(fileStructure.directories[directoryName]).be.undefined();
       });
+      it("should not delete non-empty dirs", async () => {
+        const fileStructure = exampleFileStructure();
+        const provider = inMemoryFileAdapter(fileStructure);
+        const prov = await provider.getDirectoryProvider("subresource1");
+        await provider.deleteDirectory("subresource1").should.be.rejectedWith("Directory not empty");
+      });
+      it("should delete current dir", async () => {
+        const fileStructure = exampleFileStructure();
+        const provider = inMemoryFileAdapter(fileStructure);
+        const directoryName = "testDir";
+        should(provider.createDirectory(directoryName)).not.be.rejected();
+        const subdirProvider = await provider.getDirectoryProvider(directoryName);
+        should(subdirProvider.deleteDirectory()).not.be.rejected();
+        should(fileStructure.directories[directoryName]).be.undefined();
+      });
       it("should not overwrite subdirs", () => {
         const fileStructure = exampleFileStructure();
         const provider = inMemoryFileAdapter(fileStructure);

@@ -35,7 +35,12 @@ const fsFileAdapter = (directoryPath) => {
     deleteFile: (fileName) => {
       const fullPath = path.join(directoryPath, fileName);
       return new Promise((resolve, reject) => {
-        fs.unlink(fullPath, returnAsPromise(resolve, reject));
+        if (fs.existsSync(fullPath)) {
+          fs.unlink(fullPath, returnAsPromise(resolve, reject));
+        }
+        else {
+          resolve();
+        }
       });
     },
     listFiles: () => {
@@ -68,7 +73,7 @@ const fsFileAdapter = (directoryPath) => {
       return Promise.resolve();
     },
     deleteDirectory: (directoryName) => {
-      const fullPath = path.join(directoryPath, directoryName);
+      const fullPath = directoryName !== undefined ? path.join(directoryPath, directoryName) : directoryPath;
       return new Promise((resolve, reject) => {
         fs.rmdir(fullPath, returnAsPromise(resolve, reject));
       });

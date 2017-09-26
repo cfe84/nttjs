@@ -1,3 +1,5 @@
+const rmrf = require("../middleware/rmrf");
+
 const ENTITY_FILENAME = "entity.json";
 
 const entityFactoryProvider = (serializer, resourceFactoryProvider) => {
@@ -25,6 +27,13 @@ const entityFactoryProvider = (serializer, resourceFactoryProvider) => {
           }
           const serializedContent = serializer.serialize(content);
           return fileAdapter.writeFile(ENTITY_FILENAME, serializedContent);
+        },
+        delete: async () => {
+          const subResources = await entityProvider.listResources();
+          if (subResources.length > 0) {
+            throw Error("Entity not empty");
+          }
+          await rmrf(fileAdapter);
         },
         listResources: () => {
           return fileAdapter.listDirectories();
@@ -66,14 +75,6 @@ const entityFactoryProvider = (serializer, resourceFactoryProvider) => {
           return fileAdapter.validate(resourceName)
             .then(() => fileAdapter.createDirectory(resourceName))
             .then(() => entityProvider.getResource(resourceName));
-        },
-        deleteResource: async (resourceName) => {
-          const subResource = await entityProvider.getResource(resourceName);
-          const entities = await subResource.listEntities();
-          if (entities.length > 0) {
-            throw Error("Resource not empty");
-          }
-          await fileAdapter.deleteDirectory(resourceName);
         }
       };
       return entityProvider;

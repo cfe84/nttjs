@@ -63,6 +63,28 @@ describe("FS Integration test", () => {
       });
   });
 
+  it("deletes entities", async () => {
+    const RESOURCE_NAME = "resource-delete_entity";
+    const RESOURCE_ENTITY = {
+      id: 1,
+      name: "YOU"
+    };
+    const resource = await rootEntity.createResource(RESOURCE_NAME);
+    const entity = await resource.createEntity(RESOURCE_ENTITY.id);
+    await entity.save(RESOURCE_ENTITY);
+    await resource.deleteEntity(RESOURCE_ENTITY.id);
+    const entityFolder = path.join(resources.rootDirectory, RESOURCE_NAME, `${RESOURCE_ENTITY.id}`);
+    fs.existsSync(entityFolder).should.be.false("Entity was not deleted");
+  });
+
+  it("deletes resources", async () => {
+    const RESOURCE_NAME = "resource-delete_resource";
+    await rootEntity.createResource(RESOURCE_NAME);
+    await rootEntity.deleteResource(RESOURCE_NAME);
+    const resourceFolder = path.join(resources.rootDirectory, RESOURCE_NAME);
+    fs.existsSync(resourceFolder).should.be.false("Resource was not deleted");
+  });
+
   it("creates complex stuff", () => {
     const RESOURCE = "hello";
     const SUBRESOURCE = "hi";
