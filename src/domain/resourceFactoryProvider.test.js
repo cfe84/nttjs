@@ -6,24 +6,25 @@ const { inMemoryFileAdapter, exampleFileStructure } = require("../infrastructure
 
 describe("Resource provider", () => {
 
-  const createResourceWithNewMock = (subResources) => {
-    const entityFactoryProviderStub = (serializer, resourceFactoryProvider) => {
-      return {
-        create: (fsAdapter) => {
-          return {
-            directoryName: fsAdapter.directoryName,
-            serializer: serializer,
-            resourceFactoryProvider: resourceFactoryProvider,
-            listResources: async () => subResources
-          };
-        }
-      };
+  const entityFactoryProviderStub = (subResources) => (serializer, resourceFactoryProvider) => {
+    return {
+      create: (fsAdapter) => {
+        return {
+          directoryName: fsAdapter.directoryName,
+          serializer: serializer,
+          resourceFactoryProvider: resourceFactoryProvider,
+          listResources: async () => subResources
+        };
+      }
     };
+  };
+
+  const createResourceWithNewMock = (subResources) => {
     const fileStructure = exampleFileStructure()
       .directories
       .subresource1;
     const mockProvider = inMemoryFileAdapter(fileStructure);
-    const resourceFactory = resourceFactoryProvider(JSONSerializer, entityFactoryProviderStub);
+    const resourceFactory = resourceFactoryProvider(JSONSerializer, entityFactoryProviderStub(subResources));
     const newResource = resourceFactory.create(mockProvider);
     newResource.fileStructure = fileStructure;
     return newResource;
@@ -122,37 +123,28 @@ describe("Resource provider", () => {
     });
   });
 
-  describe("Delete entities", () => {
-    it("deletes entities when they're empty", async () => {
+  describe("Deleting resources", () => {
+    it("should not delete existing entities when not empty", async () => {
       // prepare
-      const DELETED_ENTITY_ID = "1";
-      const NOT_DELETED_ENTITY_ID = "2";
-      const resource = createResourceWithNewMock([]);
-
+      const resource = createResourceWithNewMock();
       // run
-      await resource.deleteEntity(DELETED_ENTITY_ID)
-
+      return should(resource.delete())
       // assess
-        .should.not.be.rejected();
-      const list = await resource.listEntities();
-      list.should.containEql(NOT_DELETED_ENTITY_ID);
-      list.should.not.containEql(DELETED_ENTITY_ID);
+        .be.rejectedWith("Resource not empty");
     });
-
-    it("doesn't delete on entity not empty", async () => {
+    it("should delete existing resources when empty", async () => {
       // prepare
-      const DELETED_ENTITY_ID = "1";
-      const NOT_DELETED_ENTITY_ID = "2";
-      const resource = createResourceWithNewMock(["resource"]);
-
+      const fileStructure = exampleFileStructure();
+      fileStructure.directories.subresource1.directories = {};
+      const mockProvider = inMemoryFileAdapter(fileStructure);
+      const resourceDirProvider = await mockProvider
+        .getDirectoryProvider("subresource1");
+      const resourceFactory = resourceFactoryProvider(JSONSerializer, entityFactoryProviderStub([]));
+      const resource = resourceFactory.create(resourceDirProvider);
       // run
-      await resource.deleteEntity(DELETED_ENTITY_ID)
-
+      await resource.delete();
       // assess
-        .should.be.rejectedWith("Entity not empty");
-      const list = await resource.listEntities();
-      list.should.containEql(NOT_DELETED_ENTITY_ID);
-      list.should.containEql(DELETED_ENTITY_ID);
+      should(fileStructure).not.have.key("subresource1");
     });
   });
 });

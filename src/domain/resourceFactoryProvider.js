@@ -1,4 +1,5 @@
 const uuid = require("uuid");
+const rmrf = require("../middleware/rmrf");
 
 const resourceFactoryProvider = (serializer, entityFactoryProvider) => {
   return {
@@ -55,17 +56,12 @@ const resourceFactoryProvider = (serializer, entityFactoryProvider) => {
             });
         },
 
-        deleteEntity: async (id) => {
-          id = toString(id);
-          const entity = await resourceProvider.getEntity(id);
-          const subResources = await entity.listResources();
-          if (subResources.length > 0) {
-            throw Error("Entity not empty");
+        delete: async () => {
+          const entities = await resourceProvider.listEntities();
+          if (entities.length > 0) {
+            throw Error("Resource not empty");
           }
-          // Todo: There's a logical inconsistency that the resource should know of
-          // the entity file. Think about how to fix that.
-          await fileAdapter.deleteFile("entity.json");
-          await fileAdapter.deleteDirectory(id);
+          await rmrf(fileAdapter);
         }
       };
       return resourceProvider;
