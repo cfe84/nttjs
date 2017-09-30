@@ -143,8 +143,8 @@ Entities are objects offering the following properties:
   resource object to manipulate it, as the only parameter to a promise.
   This method will _not_ crash if resource already exists, and then 
   just return the existing resource.
-- `deleteResource(resourceName)` deletes corresponding resource. 
-  To be deleted, the resource must have no sub-entities.
+- `delete()` deletes the entity. 
+  To be deleted, the entity must have no sub-resources.
 - `name` is a string, represents the name of the entity.
   
 Resources are objects offering the following properties:
@@ -167,8 +167,7 @@ Resources are objects offering the following properties:
   to define its id. If no `entityId` is supplied, a new guid is 
   generated. This **will** crash if entity already exists, and will
   return a promise whose only parameter is an entity object.
-- `deleteEntity(entityId)` deletes the corresponding entity. The 
-  entity must have removed all its resources before you can delete it.
+- `delete()` deletes the resource if it's empty.
 
 ## Other considerations
 
